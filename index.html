@@ -471,7 +471,8 @@ function enviarReto(){
     // Usar push() para clave única
     const retoRef=DB.ref('retos').push();
     miRetoId=retoRef.key;
-    retoRef.set({id:miRetoId,uid,nombre:p.nombre,correo:p.correo,celular:p.celular,org:p.org||'',reto,poblacion,ubicacion,timestamp:Date.now()})
+    // Guardar la clave exacta de Firebase como id para que coincida en votación
+    retoRef.set({id:retoRef.key,uid,nombre:p.nombre,correo:p.correo,celular:p.celular,org:p.org||'',reto,poblacion,ubicacion,timestamp:Date.now()})
       .then(()=>{
         DB.ref('participantes/'+uid).update({fase:'reto-enviado',miRetoId});
         document.getElementById('card-mi-reto-espera').style.display='block';
@@ -485,12 +486,15 @@ function enviarReto(){
 function cargarRetosVotacion(){
   const lista=document.getElementById('lista-retos-votacion');
   lista.innerHTML='<div class="loading">Cargando retos…</div>';
-  // Escucha en tiempo real — todos los retos
+  // Escucha en tiempo real — todos los retos con su clave de Firebase
   DB.ref('retos').on('value',snap=>{
     const retos=[];
     snap.forEach(c=>{
       const v=c.val();
-      if(v && v.reto && v.reto.trim()) retos.push(v);
+      if(v && v.reto && v.reto.trim()){
+        v._key=c.key; // guardar clave real de Firebase
+        retos.push(v);
+      }
     });
     if(!retos.length){
       lista.innerHTML='<div class="loading">No hay retos registrados aún.</div>';
@@ -501,14 +505,16 @@ function cargarRetosVotacion(){
     // Construir tarjetas
     lista.innerHTML='';
     retos.forEach(r=>{
+      // Usar la clave de Firebase (r._key) si está disponible, sino r.id
+      const retoKey = r._key || r.id;
       const div=document.createElement('div');
-      div.className='reto-card'+(retoVotadoId===r.id?' seleccionado':'');
-      div.id='rc-'+r.id;
+      div.className='reto-card'+(retoVotadoId===retoKey?' seleccionado':'');
+      div.id='rc-'+retoKey;
       div.innerHTML=`
         <div class="check-icon">✓</div>
         <div class="reto-texto">${esc(r.reto)}</div>
         <div class="reto-autor">📍 ${esc(r.ubicacion||'Tame, Arauca')} · ${esc(r.nombre||'—')}</div>`;
-      div.addEventListener('click',()=>seleccionarReto(r.id));
+      div.addEventListener('click',()=>seleccionarReto(retoKey));
       lista.appendChild(div);
     });
   });
@@ -769,12 +775,11 @@ function renderFacVotos(votos){
     const textos={};
     snap.forEach(c=>{
       const r=c.val();
-      // La clave en Firebase es el push ID, el campo id dentro del objeto también
-      if(r){
-        // Guardar por el id interno del objeto
-        if(r.id) textos[r.id]=r.reto;
-        // También guardar por la clave del nodo (key)
+      if(r&&r.reto){
+        // Usar SIEMPRE la clave del nodo de Firebase como referencia principal
         textos[c.key]=r.reto;
+        // También por id interno por compatibilidad
+        if(r.id) textos[r.id]=r.reto;
       }
     });
     const lista=document.getElementById('fac-votos-lista');
