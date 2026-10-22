@@ -484,19 +484,34 @@ function enviarReto(){
 function cargarRetosVotacion(){
   const lista=document.getElementById('lista-retos-votacion');
   lista.innerHTML='<div class="loading">Cargando retos…</div>';
-  // Escucha en tiempo real — muestra TODOS los retos válidos
-  DB.ref('retos').orderByChild('timestamp').on('value',snap=>{
+  // Escucha en tiempo real — todos los retos
+  DB.ref('retos').on('value',snap=>{
     const retos=[];
-    snap.forEach(c=>{const v=c.val();if(v&&v.reto&&v.reto.trim())retos.push(v);});
-    if(!retos.length){lista.innerHTML='<div class="loading">No hay retos registrados aún.</div>';return;}
-    const selActual=retoVotadoId;
-    lista.innerHTML=retos.map(r=>`
-      <div class="reto-card${selActual===r.id?' seleccionado':''}" id="rc-${r.id}" onclick="${yaVote?'':'seleccionarReto(\''+r.id+'\')'}">
+    snap.forEach(c=>{
+      const v=c.val();
+      if(v && v.reto && v.reto.trim()) retos.push(v);
+    });
+    if(!retos.length){
+      lista.innerHTML='<div class="loading">No hay retos registrados aún.</div>';
+      return;
+    }
+    // Ordenar por timestamp
+    retos.sort((a,b)=>(a.timestamp||0)-(b.timestamp||0));
+    // Construir tarjetas
+    lista.innerHTML='';
+    retos.forEach(r=>{
+      const div=document.createElement('div');
+      div.className='reto-card'+(retoVotadoId===r.id?' seleccionado':'');
+      div.id='rc-'+r.id;
+      div.innerHTML=`
         <div class="check-icon">✓</div>
         <div class="reto-texto">${esc(r.reto)}</div>
-        <div class="reto-autor">📍 ${esc(r.ubicacion||'Tame, Arauca')} · ${esc(r.nombre||'—')}</div>
-      </div>`).join('');
+        <div class="reto-autor">📍 ${esc(r.ubicacion||'Tame, Arauca')} · ${esc(r.nombre||'—')}</div>`;
+      div.addEventListener('click',()=>seleccionarReto(r.id));
+      lista.appendChild(div);
+    });
   });
+  // Votos en tiempo real para pantalla de espera
   DB.ref('votos').on('value',snap=>{
     const vs=[];snap.forEach(c=>vs.push(c.val()));
     renderResultadosVotos(vs,document.getElementById('lista-resultados-votos'));
