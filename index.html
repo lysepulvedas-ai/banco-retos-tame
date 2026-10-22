@@ -456,10 +456,12 @@ function enviarReto(){
   if(!reto){toast('Por favor describe tu reto');return;}
   const btn=document.getElementById('btn-enviar-reto');
   btn.disabled=true;btn.textContent='Enviando…';
-  miRetoId='reto_'+uid;
-  DB.ref('retos/'+miRetoId).set({id:miRetoId,uid,nombre:miNombre,correo:miCorreo,celular:miCelular,org:miOrg,reto,poblacion,ubicacion,timestamp:Date.now()})
+  // Usar push() para generar clave única por cada reto enviado
+  const retoRef=DB.ref('retos').push();
+  miRetoId=retoRef.key;
+  retoRef.set({id:miRetoId,uid,nombre:miNombre,correo:miCorreo,celular:miCelular,org:miOrg,reto,poblacion,ubicacion,timestamp:Date.now()})
     .then(()=>{
-      DB.ref('participantes/'+uid).update({fase:'reto-enviado'});
+      DB.ref('participantes/'+uid).update({fase:'reto-enviado',miRetoId});
       document.getElementById('card-mi-reto-espera').style.display='block';
       document.getElementById('txt-mi-reto-espera').textContent=reto;
       mostrarPantalla('p-espera');
@@ -470,12 +472,15 @@ function enviarReto(){
 function cargarRetosVotacion(){
   const lista=document.getElementById('lista-retos-votacion');
   lista.innerHTML='<div class="loading">Cargando retos…</div>';
-  DB.ref('retos').once('value',snap=>{
+  // Escucha en tiempo real para que aparezcan todos los retos al instante
+  DB.ref('retos').on('value',snap=>{
     const retos=[];snap.forEach(c=>retos.push(c.val()));
     if(!retos.length){lista.innerHTML='<div class="loading">No hay retos registrados aún.</div>';return;}
     retos.sort((a,b)=>a.timestamp-b.timestamp);
+    // Guardar selección actual para no perderla si llegan nuevos retos
+    const selActual=retoVotadoId;
     lista.innerHTML=retos.map(r=>`
-      <div class="reto-card" id="rc-${r.id}" onclick="seleccionarReto('${r.id}')">
+      <div class="reto-card${selActual===r.id?' seleccionado':''}" id="rc-${r.id}" onclick="seleccionarReto('${r.id}')">
         <div class="check-icon">✓</div>
         <div class="reto-texto">${esc(r.reto)}</div>
         <div class="reto-autor">📍 ${esc(r.ubicacion||'Tame, Arauca')} · ${esc(r.nombre||'—')}</div>
@@ -619,9 +624,10 @@ function cargarFacilitador(){
     document.getElementById('s-retos').textContent=ps.filter(p=>['reto-enviado','voto-enviado','completo'].includes(p.fase)).length;
     renderParticipantes(ps);
   });
-  // Retos en tiempo real
+  // Retos en tiempo real — todos los de cada participante
   DB.ref('retos').on('value',snap=>{
-    const retos=[];snap.forEach(c=>retos.push(c.val()));
+    const retos=[];
+    snap.forEach(c=>{const v=c.val();if(v&&v.reto)retos.push(v);});
     renderRetosParaFacilitador(retos);
   });
   // Votos en tiempo real
