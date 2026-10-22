@@ -377,6 +377,7 @@ const CLAVE_FACILITADOR = '2411';
 // uid único por sesión (no localStorage) para que cada persona que abra la app sea independiente
 let uid = Math.random().toString(36).slice(2,10) + Math.random().toString(36).slice(2,10);
 let miNombre='',miCorreo='',miCelular='',miOrg='',miRetoId=null,retoVotadoId=null,yaVote=false;
+const retosMap={}; // mapa idx -> {key, reto} para evitar corrupción de IDs
 let faseActual='retos',retoGanadorId=null,retoGanadorTexto='';
 
 const FASES=[
@@ -504,17 +505,18 @@ function cargarRetosVotacion(){
     retos.sort((a,b)=>(a.timestamp||0)-(b.timestamp||0));
     // Construir tarjetas
     lista.innerHTML='';
-    retos.forEach(r=>{
-      // Usar la clave de Firebase (r._key) si está disponible, sino r.id
-      const retoKey = r._key || r.id;
+    // Limpiar mapa y reconstruir con índices numéricos
+    Object.keys(retosMap).forEach(k=>delete retosMap[k]);
+    retos.forEach((r,idx)=>{
+      retosMap[idx]={key:r._key, texto:r.reto};
       const div=document.createElement('div');
-      div.className='reto-card'+(retoVotadoId===retoKey?' seleccionado':'');
-      div.id='rc-'+retoKey;
+      div.className='reto-card'+(retoVotadoId===r._key?' seleccionado':'');
+      div.id='rc-'+idx;
       div.innerHTML=`
         <div class="check-icon">✓</div>
         <div class="reto-texto">${esc(r.reto)}</div>
         <div class="reto-autor">📍 ${esc(r.ubicacion||'Tame, Arauca')} · ${esc(r.nombre||'—')}</div>`;
-      div.addEventListener('click',()=>seleccionarReto(retoKey));
+      div.addEventListener('click',()=>seleccionarRetoIdx(idx));
       lista.appendChild(div);
     });
   });
@@ -531,6 +533,17 @@ function seleccionarReto(id){
   document.getElementById('rc-'+id)?.classList.add('seleccionado');
   retoVotadoId=id;
   document.getElementById('btn-votar').disabled=false;
+}
+function seleccionarRetoIdx(idx){
+  if(yaVote)return;
+  const entry=retosMap[idx];
+  if(!entry)return;
+  // Usar la clave exacta del mapa — nunca manipulada como string en HTML
+  retoVotadoId=entry.key;
+  document.querySelectorAll('.reto-card').forEach(c=>c.classList.remove('seleccionado'));
+  document.getElementById('rc-'+idx)?.classList.add('seleccionado');
+  document.getElementById('btn-votar').disabled=false;
+  console.log('Reto seleccionado key:', retoVotadoId);
 }
 
 function enviarVoto(){
