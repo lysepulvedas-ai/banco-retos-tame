@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Banco de Retos – Sede Orinoquía</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<style>
+:root{--verde:#2D6A4F;--verde-claro:#40916C;--verde-pale:#D8F3DC;--arena:#F8F4EE;--tierra:#A67C52;--texto:#1A2E1F;--texto-suave:#4A6355;--borde:#C8DDD2;--blanco:#FFFFFF;--rojo:#C0392B;--rojo-pale:#FDECEA;--amarillo:#E9A800;--amarillo-pale:#FFF8E1;--radius:12px;--sombra:0 2px 12px rgba(45,106,79,0.10)}
+@media(prefers-color-scheme:dark){:root{--arena:#111E16;--blanco:#1A2E22;--texto:#E8F5EC;--texto-suave:#9BBFA8;--borde:#2A4033;--verde-pale:#1A3A28;--rojo-pale:#2A1A18;--amarillo-pale:#2A2310}}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--arena);color:var(--texto)}
+body{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--borde);border-radius:3px}
+#app{min-height:100vh;display:flex;flex-direction:column}
+header{background:var(--verde);color:#fff;padding:16px 20px;display:flex;align-items:center;gap:12px}
+header h1{font-family:'DM Serif Display',serif;font-size:1.1rem;line-height:1.2;color:#fff}
+header p{font-size:0.75rem;opacity:.75;color:#fff;margin-top:2px}
+.logo-unal{width:40px;height:40px;background:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+main{flex:1;padding:20px 16px;max-width:640px;margin:0 auto;width:100%}
+.pantalla{display:none;flex-direction:column;gap:16px}
+.pantalla.activa{display:flex}
+.card{background:var(--blanco);border:1px solid var(--borde);border-radius:var(--radius);padding:22px;box-shadow:var(--sombra)}
+.card h2{font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--verde);margin-bottom:8px}
+.card h3{font-size:1rem;font-weight:600;color:var(--verde);margin-bottom:12px}
+.card p{font-size:0.88rem;color:var(--texto-suave);line-height:1.6}
+input[type="text"],input[type="number"],textarea,select{font-family:'DM Sans',sans-serif;font-size:0.9rem;border:1.5px solid var(--borde);border-radius:8px;padding:10px 14px;background:var(--arena);color:var(--texto);width:100%;transition:border-color .15s}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--verde-claro)}
+textarea{resize:vertical;min-height:90px}
+.campo{display:flex;flex-direction:column;gap:6px}
+.campo label{font-size:0.8rem;font-weight:600;color:var(--texto-suave)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:8px;font-size:0.88rem;font-weight:600;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif}
+.btn-primary{background:var(--verde);color:#fff}.btn-primary:hover{background:var(--verde-claro)}
+.btn-secondary{background:var(--blanco);color:var(--verde);border:1.5px solid var(--verde)}.btn-secondary:hover{background:var(--verde-pale)}
+.btn-sm{padding:6px 12px;font-size:0.8rem}
+.btn-full{width:100%;justify-content:center}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.info-box{background:var(--amarillo-pale);border:1px solid #f0d080;border-radius:8px;padding:12px 14px;font-size:0.82rem;color:#7A5A00;line-height:1.5}
+.success-box{background:var(--verde-pale);border:1.5px solid var(--verde-claro);border-radius:var(--radius);padding:24px;text-align:center}
+.success-box .icono{font-size:2.8rem;margin-bottom:10px}
+.success-box h3{font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--verde);margin-bottom:6px}
+.success-box p{font-size:0.85rem;color:var(--texto-suave)}
+.separador{border:none;border-top:1px solid var(--borde);margin:4px 0}
+.tag{display:inline-block;background:var(--verde-pale);color:var(--verde);font-size:0.75rem;font-weight:600;padding:3px 10px;border-radius:20px;border:1px solid var(--borde)}
+.badge{display:inline-block;font-size:0.72rem;font-weight:600;padding:3px 10px;border-radius:20px}
+.badge-verde{background:var(--verde-pale);color:var(--verde)}
+.badge-amarillo{background:var(--amarillo-pale);color:var(--amarillo);border:1px solid #f0d080}
+.badge-rojo{background:var(--rojo-pale);color:var(--rojo)}
+.fase-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(64,145,108,.15);color:var(--verde-claro);font-size:0.78rem;font-weight:600;padding:4px 12px;border-radius:20px;border:1px solid var(--verde-claro)}
+.fase-dot{width:7px;height:7px;border-radius:50%;background:var(--verde-claro);animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.reto-card{background:var(--blanco);border:2px solid var(--borde);border-radius:10px;padding:14px 16px;cursor:pointer;transition:all .2s;position:relative}
+.reto-card:hover{border-color:var(--verde-claro);background:var(--verde-pale)}
+.reto-card.seleccionado{border-color:var(--verde);background:var(--verde-pale)}
+.reto-card .reto-texto{font-size:0.88rem;line-height:1.5;color:var(--texto)}
+.reto-card .reto-autor{font-size:0.74rem;color:var(--texto-suave);margin-top:6px}
+.check-icon{position:absolute;top:12px;right:12px;width:22px;height:22px;background:var(--verde);border-radius:50%;display:none;align-items:center;justify-content:center;color:#fff;font-size:0.75rem}
+.reto-card.seleccionado .check-icon{display:flex}
+.arbol-wrap{background:var(--verde-pale);border-radius:10px;padding:16px;border:1px solid var(--borde)}
+.arbol-seccion{margin-bottom:14px}
+.arbol-seccion:last-child{margin-bottom:0}
+.arbol-label{font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.arbol-label.ramas{color:var(--verde-claro)}
+.arbol-label.tronco{color:var(--tierra)}
+.arbol-label.raices{color:#6B4C3B}
+.arbol-items{display:flex;flex-direction:column;gap:5px}
+.arbol-item-row{background:var(--blanco);border-radius:6px;padding:8px 12px;font-size:0.83rem;border:1px solid var(--borde)}
+.arbol-item-row .autor{font-size:0.7rem;color:var(--texto-suave);margin-top:2px}
+.tronco-box{background:var(--tierra);color:#fff;border-radius:8px;padding:12px 16px;text-align:center;font-size:0.9rem;font-weight:600;line-height:1.4}
+.matriz-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:480px){.matriz-grid{grid-template-columns:1fr}}
+.matriz-celda{background:var(--arena);border:1.5px solid var(--borde);border-radius:8px;padding:12px}
+.matriz-celda label{font-size:0.78rem;font-weight:600;color:var(--verde-claro);display:block;margin-bottom:6px}
+.matriz-celda textarea{background:var(--blanco);font-size:0.84rem;min-height:85px}
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat-box{background:var(--blanco);border:1px solid var(--borde);border-radius:10px;padding:14px;text-align:center}
+.stat-box .num{font-size:1.7rem;font-weight:600;color:var(--verde-claro)}
+.stat-box .lbl{font-size:0.73rem;color:var(--texto-suave);margin-top:2px}
+.participante-row{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--blanco);border:1px solid var(--borde);border-radius:8px}
+.participante-row .nombre{font-size:0.88rem;font-weight:600}
+.participante-row .estado{font-size:0.75rem;color:var(--texto-suave)}
+.btn-fase{padding:8px 16px;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;border:1.5px solid;font-family:'DM Sans',sans-serif;transition:all .15s}
+.btn-fase-activo{background:var(--verde);color:#fff;border-color:var(--verde)}
+.btn-fase-inactivo{background:var(--blanco);color:var(--verde);border-color:var(--verde)}
+.resultado-reto{background:var(--blanco);border:1px solid var(--borde);border-radius:10px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.resultado-reto.ganador{border-color:var(--verde);background:var(--verde-pale)}
+.votos-barra-wrap{flex:1;margin:0 12px}
+.votos-barra{height:6px;background:var(--borde);border-radius:3px;margin-top:4px}
+.votos-fill{height:100%;background:var(--verde-claro);border-radius:3px;transition:width .6s}
+.resultado-reto.ganador .votos-fill{background:var(--verde)}
+.votos-num{font-size:0.75rem;font-weight:600;color:var(--verde);white-space:nowrap}
+.espera-animacion{text-align:center;padding:32px 20px}
+.espera-animacion .grande{font-size:3rem;margin-bottom:12px}
+.espera-animacion h3{font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--verde);margin-bottom:8px}
+.espera-animacion p{font-size:0.85rem;color:var(--texto-suave);line-height:1.5}
+.puntos{display:inline-flex;gap:5px;margin-top:12px}
+.puntos span{width:8px;height:8px;border-radius:50%;background:var(--verde-claro);animation:punto 1.2s infinite}
+.puntos span:nth-child(2){animation-delay:.2s}
+.puntos span:nth-child(3){animation-delay:.4s}
+@keyframes punto{0%,100%{opacity:.2}50%{opacity:1}}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--texto);color:#fff;padding:10px 20px;border-radius:8px;font-size:0.85rem;opacity:0;transition:opacity .3s;pointer-events:none;z-index:100;white-space:nowrap}
+.toast.visible{opacity:1}
+.loading{text-align:center;padding:32px;color:var(--texto-suave);font-size:0.88rem}
+.fases-btns{display:flex;gap:8px;flex-wrap:wrap}
+.arbol-final{background:var(--verde-pale);border-radius:10px;padding:16px;border:1px solid var(--borde)}
+.arbol-final-tronco{background:var(--verde);color:#fff;border-radius:8px;padding:14px;text-align:center;font-size:1rem;font-weight:600;margin:10px 0}
+.arbol-final-items{display:flex;flex-direction:column;gap:4px}
+.arbol-final-item{background:var(--blanco);border-radius:6px;padding:8px 12px;font-size:0.84rem;border:1px solid var(--borde)}
+</style>
+</head>
+<body>
+<div id="app">
+<header>
+  <div class="logo-unal">
+    <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" width="28" height="28">
+      <circle cx="20" cy="20" r="18" fill="#2D6A4F"/>
+      <text x="20" y="26" text-anchor="middle" font-size="14" font-weight="bold" fill="white" font-family="serif">UN</text>
+    </svg>
+  </div>
+  <div>
+    <h1>Banco de Retos — Orinoquía</h1>
+    <p>Tame, Arauca · Universidad Nacional de Colombia</p>
+  </div>
+</header>
+<main>
+
+<!-- INGRESO -->
+<div id="p-ingreso" class="pantalla activa">
+  <div class="card">
+    <h2>Bienvenidos al encuentro territorial</h2>
+    <p>Esta sesión te guiará por cuatro momentos participativos. Primero escribe tu reto, luego vota, luego aporta al árbol colectivo y finalmente completa la matriz.</p>
+  </div>
+  <div class="card">
+    <h3>¿Cómo deseas ingresar?</h3>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="campo"><label>Tu nombre completo</label><input type="text" id="inp-nombre" placeholder="Escribe tu nombre" maxlength="60"></div>
+      <div class="campo"><label>Tu organización o comunidad (opcional)</label><input type="text" id="inp-org" placeholder="Ej: Junta de Acción Comunal" maxlength="80"></div>
+      <button class="btn btn-primary btn-full" onclick="ingresarParticipante()">Entrar como participante →</button>
+      <hr class="separador">
+      <button class="btn btn-secondary btn-full" onclick="mostrarPantalla('p-facilitador');cargarFacilitador()">Ver panel del facilitador</button>
+    </div>
+  </div>
+</div>
+
+<!-- RETO -->
+<div id="p-reto" class="pantalla">
+  <div class="card" style="padding:16px 20px">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <div><div class="fase-chip"><span class="fase-dot"></span>Momento 1 de 4</div>
+        <div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--verde);margin-top:6px">Propón tu reto</div></div>
+      <span class="tag" id="tag-nombre-reto"></span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="info-box" style="margin-bottom:16px">💡 Piensa en un problema que afecte a Arauca y que pueda resolverse de forma articulada entre la Universidad y las organizaciones.</div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="campo"><label>¿Cuál es el reto o problema que propones?</label><textarea id="inp-reto" placeholder="Describe el reto con claridad…" rows="4"></textarea></div>
+      <div class="campo"><label>Población directamente afectada</label><input type="text" id="inp-poblacion" placeholder="Ej: Campesinos del municipio de Tame"></div>
+      <div class="campo"><label>Ubicación territorial</label><input type="text" id="inp-ubicacion" placeholder="Ej: Vereda El Amparo, Tame – Arauca"></div>
+      <button class="btn btn-primary btn-full" onclick="enviarReto()" id="btn-enviar-reto">Enviar mi reto →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ESPERA VOTACION -->
+<div id="p-espera" class="pantalla">
+  <div class="card">
+    <div class="espera-animacion">
+      <div class="grande">🕐</div>
+      <h3>Reto enviado correctamente</h3>
+      <p>Espera mientras el facilitador abre la fase de votación.</p>
+      <div class="puntos"><span></span><span></span><span></span></div>
+    </div>
+  </div>
+  <div class="card" id="card-mi-reto-espera" style="display:none">
+    <div style="font-size:0.75rem;font-weight:600;color:var(--texto-suave);margin-bottom:6px">TU RETO ENVIADO</div>
+    <div id="txt-mi-reto-espera" style="font-size:0.88rem;line-height:1.5"></div>
+  </div>
+</div>
+
+<!-- VOTACION -->
+<div id="p-votacion" class="pantalla">
+  <div class="card" style="padding:16px 20px">
+    <div class="fase-chip"><span class="fase-dot"></span>Momento 2 de 4</div>
+    <div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--verde);margin-top:6px">Vota por el reto más importante</div>
+    <p style="font-size:0.82rem;color:var(--texto-suave);margin-top:4px">Lee todos los retos y selecciona el que consideres más urgente.</p>
+  </div>
+  <div id="lista-retos-votacion" style="display:flex;flex-direction:column;gap:10px"><div class="loading">Cargando retos…</div></div>
+  <button class="btn btn-primary btn-full" onclick="enviarVoto()" id="btn-votar" disabled>Confirmar mi voto →</button>
+</div>
+
+<!-- ESPERA ARBOL -->
+<div id="p-espera-arbol" class="pantalla">
+  <div class="card">
+    <div class="espera-animacion">
+      <div class="grande">🗳️</div>
+      <h3>Voto registrado</h3>
+      <p>Espera mientras el facilitador revela el reto ganador y abre el árbol colectivo.</p>
+      <div class="puntos"><span></span><span></span><span></span></div>
+    </div>
+  </div>
+  <div class="card">
+    <div style="font-size:0.75rem;font-weight:600;color:var(--texto-suave);margin-bottom:10px">VOTOS EN TIEMPO REAL</div>
+    <div id="lista-resultados-votos" style="display:flex;flex-direction:column;gap:8px"><div class="loading">Actualizando…</div></div>
+  </div>
+</div>
+
+<!-- ARBOL COLECTIVO -->
+<div id="p-arbol" class="pantalla">
+  <div class="card" style="padding:16px 20px">
+    <div class="fase-chip"><span class="fase-dot"></span>Momento 3 de 4</div>
+    <div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--verde);margin-top:6px">Árbol de problemas colectivo</div>
+  </div>
+  <div class="card">
+    <div style="font-size:0.75rem;font-weight:600;color:var(--texto-suave);margin-bottom:6px">RETO SELECCIONADO</div>
+    <div class="tronco-box" id="tronco-reto-ganador"></div>
+  </div>
+  <div class="card">
+    <div class="info-box" style="margin-bottom:16px">🌳 Agrega una causa y un efecto del problema. Todos construimos el árbol juntos.</div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="campo"><label>🌱 Una causa del problema (¿por qué ocurre?)</label><input type="text" id="inp-causa" placeholder="Ej: Falta de infraestructura vial"></div>
+      <button class="btn btn-secondary btn-full" onclick="enviarCausa()" id="btn-causa">Agregar causa</button>
+      <hr class="separador">
+      <div class="campo"><label>🌿 Un efecto del problema (¿qué consecuencias genera?)</label><input type="text" id="inp-efecto" placeholder="Ej: Pérdida de cosechas"></div>
+      <button class="btn btn-secondary btn-full" onclick="enviarEfecto()" id="btn-efecto">Agregar efecto</button>
+    </div>
+  </div>
+  <div class="card">
+    <h3 style="margin-bottom:14px">Árbol construido por todos</h3>
+    <div class="arbol-wrap">
+      <div class="arbol-seccion"><div class="arbol-label ramas">🌿 Efectos</div><div class="arbol-items" id="arbol-efectos"><div style="font-size:0.82rem;color:var(--texto-suave)">Aún no hay efectos…</div></div></div>
+      <div class="arbol-seccion" style="margin:12px 0"><div class="arbol-label tronco">🪵 Problema central</div><div class="tronco-box" id="arbol-tronco" style="font-size:0.88rem"></div></div>
+      <div class="arbol-seccion"><div class="arbol-label raices">🌱 Causas</div><div class="arbol-items" id="arbol-causas"><div style="font-size:0.82rem;color:var(--texto-suave)">Aún no hay causas…</div></div></div>
+    </div>
+  </div>
+  <button class="btn btn-primary btn-full" onclick="mostrarPantalla('p-matriz');document.getElementById('matriz-reto').textContent=retoGanadorTexto">Continuar a la Matriz →</button>
+</div>
+
+<!-- MATRIZ -->
+<div id="p-matriz" class="pantalla">
+  <div class="card" style="padding:16px 20px">
+    <div class="fase-chip"><span class="fase-dot"></span>Momento 4 de 4</div>
+    <div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--verde);margin-top:6px">Matriz de alternativas</div>
+  </div>
+  <div class="card">
+    <div class="tronco-box" id="matriz-reto" style="font-size:0.85rem;margin-bottom:16px"></div>
+    <div class="matriz-grid">
+      <div class="matriz-celda"><label>¿Qué queremos lograr? (Objetivo)</label><textarea id="m-objetivo" placeholder="Resultado esperado…"></textarea></div>
+      <div class="matriz-celda"><label>¿Para qué lo haremos? (Justificación)</label><textarea id="m-justificacion" placeholder="¿Por qué es importante?…"></textarea></div>
+      <div class="matriz-celda"><label>¿Cómo lo haremos? (Acciones)</label><textarea id="m-acciones" placeholder="¿Qué actividades proponen?…"></textarea></div>
+      <div class="matriz-celda"><label>¿Con qué recursos y quiénes?</label><textarea id="m-recursos" placeholder="Recursos y articulación con la Universidad…"></textarea></div>
+    </div>
+    <button class="btn btn-primary btn-full" style="margin-top:16px" onclick="enviarMatriz()" id="btn-enviar-matriz">Enviar mi matriz →</button>
+  </div>
+</div>
+
+<!-- FINAL -->
+<div id="p-final" class="pantalla">
+  <div class="success-box">
+    <div class="icono">🎉</div>
+    <h3>¡Participación completada!</h3>
+    <p>Gracias por tu aporte. Tus respuestas quedan guardadas en el banco de retos.</p>
+  </div>
+  <div class="card">
+    <h3 style="margin-bottom:14px">Árbol colectivo construido hoy</h3>
+    <div class="arbol-final" id="arbol-final-display"></div>
+  </div>
+  <div class="card"><p style="font-size:0.85rem;color:var(--texto-suave);text-align:center">Ahora comienza la <strong>socialización final</strong>. El facilitador guiará la presentación.</p></div>
+</div>
+
+<!-- FACILITADOR -->
+<div id="p-facilitador" class="pantalla">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+    <div style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--verde)">Panel del facilitador</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-secondary btn-sm" onclick="exportarExcel()">Exportar Excel</button>
+      <button class="btn btn-secondary btn-sm" onclick="mostrarPantalla('p-ingreso')">← Salir</button>
+    </div>
+  </div>
+  <div class="card">
+    <h3 style="margin-bottom:12px">Control de fases</h3>
+    <div class="fases-btns" id="fases-btns"></div>
+    <div style="font-size:0.78rem;color:var(--texto-suave);margin-top:10px" id="fase-desc"></div>
+  </div>
+  <div class="stats-row">
+    <div class="stat-box"><div class="num" id="s-total">0</div><div class="lbl">Participantes</div></div>
+    <div class="stat-box"><div class="num" id="s-retos">0</div><div class="lbl">Retos enviados</div></div>
+    <div class="stat-box"><div class="num" id="s-votos">0</div><div class="lbl">Votos</div></div>
+  </div>
+  <div class="card" id="card-ganador-fac" style="display:none">
+    <div style="font-size:0.75rem;font-weight:600;color:var(--texto-suave);margin-bottom:8px">🏆 RETO SELECCIONADO</div>
+    <div class="tronco-box" id="facilitador-ganador"></div>
+  </div>
+  <div class="card" id="card-votos-fac" style="display:none">
+    <h3 style="margin-bottom:12px">Resultados de votación</h3>
+    <div id="fac-votos-lista" style="display:flex;flex-direction:column;gap:8px"></div>
+  </div>
+  <div class="card">
+    <h3 style="margin-bottom:12px">Participantes</h3>
+    <div id="lista-participantes" style="display:flex;flex-direction:column;gap:8px"><div class="loading">Cargando…</div></div>
+  </div>
+  <div class="card" id="card-arbol-fac" style="display:none">
+    <h3 style="margin-bottom:14px">Árbol colectivo (tiempo real)</h3>
+    <div class="arbol-wrap">
+      <div class="arbol-seccion"><div class="arbol-label ramas">🌿 Efectos</div><div class="arbol-items" id="fac-efectos"></div></div>
+      <div class="arbol-seccion" style="margin:12px 0"><div class="arbol-label tronco">🪵 Problema central</div><div class="tronco-box" id="fac-tronco" style="font-size:0.88rem"></div></div>
+      <div class="arbol-seccion"><div class="arbol-label raices">🌱 Causas</div><div class="arbol-items" id="fac-causas"></div></div>
+    </div>
+  </div>
+</div>
+
+</main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Firebase config ──────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyCR7Xuua_vn0vB546y8v3C_wgkBqfg1HyY",
+  authDomain: "banco-retos-tame.firebaseapp.com",
+  databaseURL: "https://banco-retos-tame-default-rtdb.firebaseio.com",
+  projectId: "banco-retos-tame",
+  storageBucket: "banco-retos-tame.firebasestorage.app",
+  messagingSenderId: "70190450091",
+  appId: "1:70190450091:web:2f6d43df11fb07ad503eee"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// ── Estado ───────────────────────────────────────────────
+let uid = localStorage.getItem('br_uid') || (()=>{const id=Math.random().toString(36).slice(2,10);localStorage.setItem('br_uid',id);return id;})();
+let miNombre='', miOrg='', miRetoId=null, retoVotadoId=null, yaVote=false;
+let faseActual='retos', retoGanadorId=null, retoGanadorTexto='';
+
+const FASES=[
+  {id:'retos',label:'1 · Propuesta de retos',desc:'Los participantes escriben y envían su reto.'},
+  {id:'votacion',label:'2 · Votación',desc:'Todos votan por el reto más importante.'},
+  {id:'arbol',label:'3 · Árbol colectivo',desc:'Cada persona aporta causas y efectos.'},
+  {id:'socializacion',label:'4 · Socialización',desc:'Cierre y presentación de resultados.'},
+];
+
+// ── Utils ────────────────────────────────────────────────
+function toast(msg,dur=2600){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('visible');setTimeout(()=>t.classList.remove('visible'),dur);}
+function mostrarPantalla(id){document.querySelectorAll('.pantalla').forEach(p=>p.classList.remove('activa'));document.getElementById(id).classList.add('activa');}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function uid4(){return Math.random().toString(36).slice(2,10);}
+
+// ── Escuchar fase global ─────────────────────────────────
+db.ref('sesion/config').on('value', snap=>{
+  if(!snap.exists()) return;
+  const d=snap.val();
+  const nueva=d.fase||'retos';
+  retoGanadorId=d.retoGanadorId||null;
+  retoGanadorTexto=d.retoGanadorTexto||'';
+  if(nueva!==faseActual){
+    faseActual=nueva;
+    reaccionarFase();
+  } else { faseActual=nueva; }
+});
+
+function reaccionarFase(){
+  const pid=document.querySelector('.pantalla.activa')?.id;
+  if(faseActual==='votacion'&&pid==='p-espera'){cargarRetosVotacion();mostrarPantalla('p-votacion');toast('¡La votación está abierta!');}
+  if(faseActual==='arbol'&&(pid==='p-espera-arbol'||pid==='p-espera'||pid==='p-votacion')){iniciarArbol();mostrarPantalla('p-arbol');toast('¡Reto ganador revelado!');}
+}
+
+// ── INGRESO ──────────────────────────────────────────────
+function ingresarParticipante(){
+  miNombre=document.getElementById('inp-nombre').value.trim();
+  miOrg=document.getElementById('inp-org').value.trim();
+  if(!miNombre){toast('Por favor escribe tu nombre');return;}
+  db.ref('participantes/'+uid).set({uid,nombre:miNombre,org:miOrg,timestamp:Date.now(),fase:'ingreso'});
+  document.getElementById('tag-nombre-reto').textContent=miNombre;
+  db.ref('sesion/config').once('value',snap=>{
+    if(snap.exists()){faseActual=snap.val().fase||'retos';retoGanadorTexto=snap.val().retoGanadorTexto||'';}
+    if(faseActual==='votacion'){cargarRetosVotacion();mostrarPantalla('p-votacion');}
+    else if(faseActual==='arbol'){iniciarArbol();mostrarPantalla('p-arbol');}
+    else{mostrarPantalla('p-reto');}
+  });
+}
+
+// ── FASE 1: Reto ─────────────────────────────────────────
+function enviarReto(){
+  const reto=document.getElementById('inp-reto').value.trim();
+  const poblacion=document.getElementById('inp-poblacion').value.trim();
+  const ubicacion=document.getElementById('inp-ubicacion').value.trim();
+  if(!reto){toast('Por favor describe tu reto');return;}
+  const btn=document.getElementById('btn-enviar-reto');
+  btn.disabled=true;btn.textContent='Enviando…';
+  miRetoId='reto_'+uid;
+  db.ref('retos/'+miRetoId).set({id:miRetoId,uid,nombre:miNombre,org:miOrg,reto,poblacion,ubicacion,timestamp:Date.now()})
+    .then(()=>{
+      db.ref('participantes/'+uid).update({fase:'reto-enviado'});
+      document.getElementById('card-mi-reto-espera').style.display='block';
+      document.getElementById('txt-mi-reto-espera').textContent=reto;
+      mostrarPantalla('p-espera');
+    }).catch(()=>{toast('Error al guardar, intenta de nuevo');btn.disabled=false;btn.textContent='Enviar mi reto →';});
+}
+
+// ── FASE 2: Votación ─────────────────────────────────────
+function cargarRetosVotacion(){
+  const lista=document.getElementById('lista-retos-votacion');
+  lista.innerHTML='<div class="loading">Cargando retos…</div>';
+  db.ref('retos').once('value',snap=>{
+    const retos=[];
+    snap.forEach(c=>retos.push(c.val()));
+    if(!retos.length){lista.innerHTML='<div class="loading">No hay retos aún.</div>';return;}
+    retos.sort((a,b)=>a.timestamp-b.timestamp);
+    lista.innerHTML=retos.map(r=>`
+      <div class="reto-card" id="rc-${r.id}" onclick="seleccionarReto('${r.id}')">
+        <div class="check-icon">✓</div>
+        <div class="reto-texto">${esc(r.reto)}</div>
+        <div class="reto-autor">📍 ${esc(r.ubicacion||'—')} · ${esc(r.poblacion||'—')}</div>
+      </div>`).join('');
+  });
+  // Resultados en tiempo real para pantalla de espera
+  db.ref('votos').on('value',snap=>{
+    const vs=[];snap.forEach(c=>vs.push(c.val()));
+    renderResultadosVotos(vs,document.getElementById('lista-resultados-votos'));
+  });
+}
+
+function seleccionarReto(id){
+  if(yaVote)return;
+  document.querySelectorAll('.reto-card').forEach(c=>c.classList.remove('seleccionado'));
+  document.getElementById('rc-'+id)?.classList.add('seleccionado');
+  retoVotadoId=id;
+  document.getElementById('btn-votar').disabled=false;
+}
+
+function enviarVoto(){
+  if(!retoVotadoId){toast('Selecciona un reto para votar');return;}
+  if(yaVote){toast('Ya enviaste tu voto');return;}
+  const btn=document.getElementById('btn-votar');btn.disabled=true;btn.textContent='Registrando…';
+  db.ref('votos/'+uid).set({uid,nombre:miNombre,retoId:retoVotadoId,timestamp:Date.now()})
+    .then(()=>{
+      db.ref('participantes/'+uid).update({fase:'voto-enviado',votoRetoId:retoVotadoId});
+      yaVote=true;mostrarPantalla('p-espera-arbol');
+    }).catch(()=>{toast('Error al registrar voto');btn.disabled=false;btn.textContent='Confirmar mi voto →';});
+}
+
+function renderResultadosVotos(votos,contenedor){
+  if(!contenedor)return;
+  const conteo={};
+  votos.forEach(v=>{conteo[v.retoId]=(conteo[v.retoId]||0)+1;});
+  const items=Object.entries(conteo).sort((a,b)=>b[1]-a[1]);
+  if(!items.length){contenedor.innerHTML='<div class="loading">Aún no hay votos…</div>';return;}
+  const maxV=items[0][1];
+  // Obtener textos de retos
+  db.ref('retos').once('value',snap=>{
+    const textos={};snap.forEach(c=>{const r=c.val();textos[r.id]=r.reto;});
+    contenedor.innerHTML=items.map(([id,n],i)=>`
+      <div class="resultado-reto ${i===0?'ganador':''}">
+        ${i===0?'<span>👑</span>':''}
+        <div class="votos-barra-wrap">
+          <div style="font-size:0.82rem;line-height:1.3">${esc(textos[id]||id)}</div>
+          <div class="votos-barra"><div class="votos-fill" style="width:${Math.round(n/maxV*100)}%"></div></div>
+        </div>
+        <span class="votos-num">${n} voto${n!==1?'s':''}</span>
+      </div>`).join('');
+  });
+}
+
+// ── FASE 3: Árbol ────────────────────────────────────────
+function iniciarArbol(){
+  document.getElementById('tronco-reto-ganador').textContent=retoGanadorTexto;
+  document.getElementById('arbol-tronco').textContent=retoGanadorTexto;
+  document.getElementById('matriz-reto').textContent=retoGanadorTexto;
+  db.ref('arbol_causas').on('value',snap=>{
+    const items=[];snap.forEach(c=>items.push(c.val()));
+    items.sort((a,b)=>a.ts-b.ts);
+    renderArbolItems(items,document.getElementById('arbol-causas'),'causas');
+    renderArbolItems(items,document.getElementById('fac-causas'),'causas');
+  });
+  db.ref('arbol_efectos').on('value',snap=>{
+    const items=[];snap.forEach(c=>items.push(c.val()));
+    items.sort((a,b)=>a.ts-b.ts);
+    renderArbolItems(items,document.getElementById('arbol-efectos'),'efectos');
+    renderArbolItems(items,document.getElementById('fac-efectos'),'efectos');
+  });
+}
+
+function renderArbolItems(items,contenedor,tipo){
+  if(!contenedor)return;
+  if(!items.length){contenedor.innerHTML=`<div style="font-size:0.82rem;color:var(--texto-suave)">Aún no hay ${tipo}…</div>`;return;}
+  contenedor.innerHTML=items.map(it=>`<div class="arbol-item-row">${esc(it.texto)}<div class="autor">${esc(it.nombre||'—')}</div></div>`).join('');
+}
+
+function enviarCausa(){
+  const texto=document.getElementById('inp-causa').value.trim();
+  if(!texto){toast('Escribe una causa');return;}
+  const btn=document.getElementById('btn-causa');btn.disabled=true;
+  db.ref('arbol_causas/'+uid4()).set({texto,nombre:miNombre,uid,ts:Date.now()})
+    .then(()=>{document.getElementById('inp-causa').value='';btn.disabled=false;toast('Causa agregada ✓');})
+    .catch(()=>{toast('Error al guardar');btn.disabled=false;});
+}
+
+function enviarEfecto(){
+  const texto=document.getElementById('inp-efecto').value.trim();
+  if(!texto){toast('Escribe un efecto');return;}
+  const btn=document.getElementById('btn-efecto');btn.disabled=true;
+  db.ref('arbol_efectos/'+uid4()).set({texto,nombre:miNombre,uid,ts:Date.now()})
+    .then(()=>{document.getElementById('inp-efecto').value='';btn.disabled=false;toast('Efecto agregado ✓');})
+    .catch(()=>{toast('Error al guardar');btn.disabled=false;});
+}
+
+// ── FASE 4: Matriz ───────────────────────────────────────
+function enviarMatriz(){
+  const obj=document.getElementById('m-objetivo').value.trim();
+  if(!obj){toast('Por favor escribe el objetivo');return;}
+  const btn=document.getElementById('btn-enviar-matriz');btn.disabled=true;btn.textContent='Enviando…';
+  db.ref('matrices/'+uid).set({
+    uid,nombre:miNombre,org:miOrg,reto:retoGanadorTexto,
+    objetivo:obj,
+    justificacion:document.getElementById('m-justificacion').value.trim(),
+    acciones:document.getElementById('m-acciones').value.trim(),
+    recursos:document.getElementById('m-recursos').value.trim(),
+    timestamp:Date.now()
+  }).then(()=>{
+    db.ref('participantes/'+uid).update({fase:'completo'});
+    mostrarPantalla('p-final');
+    renderArbolFinal();
+  }).catch(()=>{toast('Error al guardar');btn.disabled=false;btn.textContent='Enviar mi matriz →';});
+}
+
+function renderArbolFinal(){
+  const c=document.getElementById('arbol-final-display');
+  Promise.all([db.ref('arbol_causas').once('value'),db.ref('arbol_efectos').once('value')]).then(([sc,se])=>{
+    const causas=[],efectos=[];
+    sc.forEach(x=>causas.push(x.val().texto));
+    se.forEach(x=>efectos.push(x.val().texto));
+    c.innerHTML=`
+      <div class="arbol-label ramas">🌿 Efectos</div>
+      <div class="arbol-final-items" style="margin-bottom:12px">${efectos.map(t=>`<div class="arbol-final-item">${esc(t)}</div>`).join('')||'<div style="font-size:0.82rem;color:var(--texto-suave)">—</div>'}</div>
+      <div class="arbol-final-tronco">${esc(retoGanadorTexto)}</div>
+      <div class="arbol-label raices" style="margin-top:12px">🌱 Causas</div>
+      <div class="arbol-final-items">${causas.map(t=>`<div class="arbol-final-item">${esc(t)}</div>`).join('')||'<div style="font-size:0.82rem;color:var(--texto-suave)">—</div>'}</div>`;
+  });
+}
+
+// ── FACILITADOR ──────────────────────────────────────────
+function cargarFacilitador(){
+  renderFasesBtns();
+  db.ref('sesion/config').once('value',snap=>{
+    if(snap.exists()){faseActual=snap.val().fase||'retos';retoGanadorTexto=snap.val().retoGanadorTexto||'';retoGanadorId=snap.val().retoGanadorId||null;}
+    renderFasesBtns();
+    if(retoGanadorTexto){
+      document.getElementById('card-ganador-fac').style.display='block';
+      document.getElementById('facilitador-ganador').textContent=retoGanadorTexto;
+      document.getElementById('fac-tronco').textContent=retoGanadorTexto;
+      document.getElementById('card-arbol-fac').style.display='block';
+    }
+  });
+  db.ref('participantes').on('value',snap=>{
+    const ps=[];snap.forEach(c=>ps.push(c.val()));
+    document.getElementById('s-total').textContent=ps.length;
+    document.getElementById('s-retos').textContent=ps.filter(p=>['reto-enviado','voto-enviado','completo'].includes(p.fase)).length;
+    renderParticipantes(ps);
+  });
+  db.ref('votos').on('value',snap=>{
+    const vs=[];snap.forEach(c=>vs.push(c.val()));
+    document.getElementById('s-votos').textContent=vs.length;
+    if(vs.length){document.getElementById('card-votos-fac').style.display='block';renderFacVotos(vs);}
+  });
+  db.ref('arbol_causas').on('value',snap=>{
+    const items=[];snap.forEach(c=>items.push(c.val()));
+    items.sort((a,b)=>a.ts-b.ts);
+    renderArbolItems(items,document.getElementById('fac-causas'),'causas');
+  });
+  db.ref('arbol_efectos').on('value',snap=>{
+    const items=[];snap.forEach(c=>items.push(c.val()));
+    items.sort((a,b)=>a.ts-b.ts);
+    renderArbolItems(items,document.getElementById('fac-efectos'),'efectos');
+  });
+}
+
+function renderParticipantes(ps){
+  const c=document.getElementById('lista-participantes');
+  if(!ps.length){c.innerHTML='<div class="loading">Ningún participante aún.</div>';return;}
+  const etiquetas={ingreso:'Ingresó','reto-enviado':'Reto enviado ✓','voto-enviado':'Voto enviado ✓',completo:'Completó todo ✓'};
+  const badges={ingreso:'badge-rojo','reto-enviado':'badge-amarillo','voto-enviado':'badge-amarillo',completo:'badge-verde'};
+  c.innerHTML=ps.sort((a,b)=>b.timestamp-a.timestamp).map(p=>`
+    <div class="participante-row">
+      <div><div class="nombre">${esc(p.nombre||'—')}</div><div class="estado">${esc(p.org||'')}</div></div>
+      <span class="badge ${badges[p.fase]||'badge-rojo'}">${etiquetas[p.fase]||'Ingresó'}</span>
+    </div>`).join('');
+}
+
+function renderFacesBtns(){renderFasesBtns();}
+function renderFasesBtns(){
+  const c=document.getElementById('fases-btns');
+  if(!c)return;
+  c.innerHTML=FASES.map(f=>`<button class="btn-fase ${f.id===faseActual?'btn-fase-activo':'btn-fase-inactivo'}" onclick="cambiarFase('${f.id}')">${f.label}</button>`).join('');
+  const cf=FASES.find(f=>f.id===faseActual);
+  const d=document.getElementById('fase-desc');
+  if(d)d.textContent=cf?cf.desc:'';
+}
+
+function cambiarFase(nuevaFase){
+  if(nuevaFase===faseActual)return;
+  db.ref('sesion/config').set({fase:nuevaFase,retoGanadorId:retoGanadorId||null,retoGanadorTexto:retoGanadorTexto||'',ts:Date.now()})
+    .then(()=>{faseActual=nuevaFase;renderFasesBtns();toast('Fase: '+FASES.find(f=>f.id===nuevaFase)?.label);})
+    .catch(()=>toast('Error al cambiar fase'));
+}
+
+function renderFacVotos(votos){
+  const conteo={};
+  votos.forEach(v=>{conteo[v.retoId]=(conteo[v.retoId]||0)+1;});
+  const items=Object.entries(conteo).sort((a,b)=>b[1]-a[1]);
+  const maxV=items[0]?.[1]||1;
+  db.ref('retos').once('value',snap=>{
+    const textos={};snap.forEach(c=>{const r=c.val();textos[r.id]=r.reto;});
+    const lista=document.getElementById('fac-votos-lista');
+    lista.innerHTML=items.map(([id,n],i)=>`
+      <div class="resultado-reto ${i===0?'ganador':''}">
+        ${i===0?'<span>👑</span>':''}
+        <div class="votos-barra-wrap">
+          <div style="font-size:0.82rem;line-height:1.3">${esc(textos[id]||id)}</div>
+          <div class="votos-barra"><div class="votos-fill" style="width:${Math.round(n/maxV*100)}%"></div></div>
+        </div>
+        <span class="votos-num">${n} voto${n!==1?'s':''}</span>
+      </div>`).join('');
+    if(items.length&&!retoGanadorId){
+      const topId=items[0][0],topTexto=textos[topId]||topId;
+      if(!document.getElementById('btn-confirmar-ganador')){
+        const b=document.createElement('button');
+        b.id='btn-confirmar-ganador';b.className='btn btn-primary btn-full';b.style.marginTop='12px';
+        b.textContent='Confirmar este reto como ganador →';
+        b.onclick=()=>confirmarGanador(topId,topTexto);
+        lista.after(b);
+      }
+    }
+  });
+}
+
+function confirmarGanador(id,texto){
+  db.ref('sesion/config').update({retoGanadorId:id,retoGanadorTexto:texto}).then(()=>{
+    retoGanadorId=id;retoGanadorTexto=texto;
+    document.getElementById('card-ganador-fac').style.display='block';
+    document.getElementById('facilitador-ganador').textContent=texto;
+    document.getElementById('fac-tronco').textContent=texto;
+    document.getElementById('card-arbol-fac').style.display='block';
+    toast('Reto ganador confirmado ✓');
+    document.getElementById('btn-confirmar-ganador')?.remove();
+  });
+}
+
+// ── Exportar Excel ───────────────────────────────────────
+function exportarExcel(){
+  Promise.all([
+    db.ref('retos').once('value'),
+    db.ref('votos').once('value'),
+    db.ref('arbol_causas').once('value'),
+    db.ref('arbol_efectos').once('value'),
+    db.ref('matrices').once('value'),
+  ]).then(([sr,sv,sc,se,sm])=>{
+    const retos=[],votos=[],causas=[],efectos=[],matrices=[];
+    sr.forEach(c=>retos.push(c.val()));
+    sv.forEach(c=>votos.push(c.val()));
+    sc.forEach(c=>causas.push(c.val()));
+    se.forEach(c=>efectos.push(c.val()));
+    sm.forEach(c=>matrices.push(c.val()));
+    const wb=XLSX.utils.book_new();
+    const wsR=XLSX.utils.json_to_sheet(retos.map(r=>({'Nombre':r.nombre||'','Organización':r.org||'','Reto':r.reto||'','Población':r.poblacion||'','Ubicación':r.ubicacion||'','Votos':votos.filter(v=>v.retoId===r.id).length,'Fecha':r.timestamp?new Date(r.timestamp).toLocaleString('es-CO'):''})));
+    wsR['!cols']=[{wch:22},{wch:30},{wch:50},{wch:25},{wch:25},{wch:8},{wch:20}];
+    XLSX.utils.book_append_sheet(wb,wsR,'Retos');
+    const arbolData=[...efectos.map(e=>({Tipo:'Efecto',Contenido:e.texto||'',Autor:e.nombre||''})),{Tipo:'PROBLEMA CENTRAL',Contenido:retoGanadorTexto,Autor:''}, ...causas.map(c=>({Tipo:'Causa',Contenido:c.texto||'',Autor:c.nombre||''}))];
+    const wsA=XLSX.utils.json_to_sheet(arbolData);
+    wsA['!cols']=[{wch:18},{wch:60},{wch:22}];
+    XLSX.utils.book_append_sheet(wb,wsA,'Árbol de Problemas');
+    if(matrices.length){
+      const wsM=XLSX.utils.json_to_sheet(matrices.map(m=>({'Nombre':m.nombre||'','Organización':m.org||'','Reto':m.reto||'','Objetivo':m.objetivo||'','Justificación':m.justificacion||'','Acciones':m.acciones||'','Recursos':m.recursos||'','Fecha':m.timestamp?new Date(m.timestamp).toLocaleString('es-CO'):''})));
+      wsM['!cols']=[{wch:22},{wch:30},{wch:40},{wch:40},{wch:40},{wch:40},{wch:40},{wch:20}];
+      XLSX.utils.book_append_sheet(wb,wsM,'Matrices');
+    }
+    const data=XLSX.write(wb,{bookType:'xlsx',type:'array'});
+    const blob=new Blob([data],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download=`Banco_Retos_Tame_${new Date().toISOString().slice(0,10)}.xlsx`;a.click();URL.revokeObjectURL(url);
+    toast('Excel descargado ✓');
+  }).catch(()=>toast('Error al exportar'));
+}
+</script>
+</body>
+</html>
