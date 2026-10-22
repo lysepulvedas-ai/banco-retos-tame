@@ -374,7 +374,8 @@ const DB = firebase.database();
 
 // ── Estado ───────────────────────────────────────────────
 const CLAVE_FACILITADOR = '2411';
-let uid = localStorage.getItem('br_uid') || (()=>{const i=Math.random().toString(36).slice(2,10);localStorage.setItem('br_uid',i);return i;})();
+// uid único por sesión (no localStorage) para que cada persona que abra la app sea independiente
+let uid = Math.random().toString(36).slice(2,10) + Math.random().toString(36).slice(2,10);
 let miNombre='',miCorreo='',miCelular='',miOrg='',miRetoId=null,retoVotadoId=null,yaVote=false;
 let faseActual='retos',retoGanadorId=null,retoGanadorTexto='';
 
@@ -647,13 +648,13 @@ function cargarFacilitador(){
   DB.ref('participantes').on('value',snap=>{
     const ps=[];snap.forEach(c=>ps.push(c.val()));
     document.getElementById('s-total').textContent=ps.length;
-    document.getElementById('s-retos').textContent=ps.filter(p=>['reto-enviado','voto-enviado','completo'].includes(p.fase)).length;
     renderParticipantes(ps);
   });
-  // Retos en tiempo real — todos los de cada participante
+  // Retos en tiempo real — contar y mostrar TODOS los retos reales
   DB.ref('retos').on('value',snap=>{
     const retos=[];
-    snap.forEach(c=>{const v=c.val();if(v&&v.reto)retos.push(v);});
+    snap.forEach(c=>{const v=c.val();if(v&&v.reto&&v.reto.trim())retos.push(v);});
+    document.getElementById('s-retos').textContent=retos.length;
     renderRetosParaFacilitador(retos);
   });
   // Votos en tiempo real
