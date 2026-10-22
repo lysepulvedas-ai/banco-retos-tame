@@ -378,6 +378,7 @@ const CLAVE_FACILITADOR = '2411';
 let uid = Math.random().toString(36).slice(2,10) + Math.random().toString(36).slice(2,10);
 let miNombre='',miCorreo='',miCelular='',miOrg='',miRetoId=null,retoVotadoId=null,yaVote=false;
 const retosMap={}; // mapa idx -> {key, reto} para evitar corrupción de IDs
+const retosTexto={}; // caché key -> texto del reto
 let faseActual='retos',retoGanadorId=null,retoGanadorTexto='';
 
 const FASES=[
@@ -681,23 +682,33 @@ function cargarFacilitador(){
   refP.on('value',fnP);
   facListeners.push({ref:refP,fn:fnP});
 
-  // Retos
+  // Retos — cachear textos para la votación
   const refR=DB.ref('retos');
   const fnR=snap=>{
     const retos=[];
-    snap.forEach(c=>{const v=c.val();if(v&&v.reto&&v.reto.trim())retos.push(v);});
+    snap.forEach(c=>{
+      const v=c.val();
+      if(v&&v.reto&&v.reto.trim()){
+        // Cachear por clave del nodo Y por id interno
+        retosTexto[c.key]=v.reto;
+        if(v.id) retosTexto[v.id]=v.reto;
+        retos.push(v);
+      }
+    });
     document.getElementById('s-retos').textContent=retos.length;
     renderRetosParaFacilitador(retos);
   };
   refR.on('value',fnR);
   facListeners.push({ref:refR,fn:fnR});
 
-  // Votos
+  // Votos — contar todos los registros individualmente
   const refV=DB.ref('votos');
   const fnV=snap=>{
-    const vs=[];snap.forEach(c=>vs.push(c.val()));
-    document.getElementById('s-votos').textContent=vs.length;
-    if(vs.length){document.getElementById('card-votos-fac').style.display='block';renderFacVotos(vs);}
+    const vs=[];
+    snap.forEach(c=>{const v=c.val();if(v&&v.retoId)vs.push(v);});
+    // Total real de votos = número de registros en /votos
+    document.getElementById('s-votos').textContent=snap.numChildren();
+    if(vs.length){document.getElementById('card-votos-fac').style.display='block';renderFacVotos(vs,snap.numChildren());}
   };
   refV.on('value',fnV);
   facListeners.push({ref:refV,fn:fnV});
@@ -774,60 +785,50 @@ function cambiarFase(nueva){
     .catch(()=>toast('Error al cambiar fase'));
 }
 
-function renderFacVotos(votos){
+function renderFacVotos(votos, totalVotos){
+  // Contar votos por retoId
   const conteo={};
-  votos.forEach(v=>{
-    if(v&&v.retoId) conteo[v.retoId]=(conteo[v.retoId]||0)+1;
-  });
-  const totalVotos=votos.length;
+  votos.forEach(v=>{if(v&&v.retoId) conteo[v.retoId]=(conteo[v.retoId]||0)+1;});
+  const total=totalVotos||votos.length;
   const items=Object.entries(conteo).sort((a,b)=>b[1]-a[1]);
   const maxV=items[0]?.[1]||1;
-  // Actualizar contador general con total real
-  document.getElementById('s-votos').textContent=totalVotos;
-  DB.ref('retos').once('value',snap=>{
-    const textos={};
-    snap.forEach(c=>{
-      const r=c.val();
-      if(r&&r.reto){
-        // Usar SIEMPRE la clave del nodo de Firebase como referencia principal
-        textos[c.key]=r.reto;
-        // También por id interno por compatibilidad
-        if(r.id) textos[r.id]=r.reto;
-      }
-    });
-    const lista=document.getElementById('fac-votos-lista');
-    lista.innerHTML='';
-    items.forEach(([id,n],i)=>{
-      const textoReto=textos[id]||id;
-      const div=document.createElement('div');
-      div.className='resultado-reto'+(i===0?' ganador':'');
-      div.innerHTML=`
-        ${i===0?'<span>👑</span>':''}
-        <div class="votos-barra-wrap">
-          <div style="font-size:0.82rem;line-height:1.3;font-weight:500">${esc(textoReto)}</div>
-          <div style="font-size:0.75rem;color:var(--texto-suave)">${n} voto${n!==1?'s':''} de ${totalVotos} total</div>
-          <div class="votos-barra"><div class="votos-fill" style="width:${Math.round(n/maxV*100)}%"></div></div>
-        </div>
-        <span class="votos-num">${n}/${totalVotos}</span>`;
-      lista.appendChild(div);
-    });
-    // Actualizar contador con total real
-    document.getElementById('s-votos').textContent=totalVotos;
-    // Botón confirmar ganador
-    if(items.length&&!retoGanadorId){
-      const topId=items[0][0];
-      const topTexto=textos[topId]||'—';
-      if(!document.getElementById('btn-confirmar-ganador')){
-        const b=document.createElement('button');
-        b.id='btn-confirmar-ganador';
-        b.className='btn btn-primary btn-full';
-        b.style.marginTop='12px';
-        b.textContent='✓ Confirmar este reto como ganador ('+items[0][1]+' votos)';
-        b.onclick=()=>confirmarGanador(topId,topTexto);
-        lista.after(b);
-      }
-    }
+
+  // Actualizar contador
+  document.getElementById('s-votos').textContent=total;
+
+  const lista=document.getElementById('fac-votos-lista');
+  lista.innerHTML='';
+
+  items.forEach(([retoId,n],i)=>{
+    // Buscar texto en caché (sin llamada async)
+    const textoReto=retosTexto[retoId]||'Reto #'+(i+1);
+    const pct=Math.round(n/total*100);
+    const div=document.createElement('div');
+    div.className='resultado-reto'+(i===0?' ganador':'');
+    div.innerHTML=`
+      ${i===0?'<span>👑</span>':''}
+      <div class="votos-barra-wrap">
+        <div style="font-size:0.88rem;font-weight:600;line-height:1.3">${esc(textoReto)}</div>
+        <div style="font-size:0.75rem;color:var(--texto-suave);margin-top:2px">${n} voto${n!==1?'s':''} (${pct}%)</div>
+        <div class="votos-barra" style="margin-top:4px"><div class="votos-fill" style="width:${pct}%"></div></div>
+      </div>
+      <span class="votos-num" style="font-size:1rem;font-weight:700">${n}</span>`;
+    lista.appendChild(div);
   });
+
+  // Botón confirmar ganador
+  document.getElementById('btn-confirmar-ganador')?.remove();
+  if(items.length&&!retoGanadorId){
+    const topId=items[0][0];
+    const topTexto=retosTexto[topId]||'Reto seleccionado';
+    const b=document.createElement('button');
+    b.id='btn-confirmar-ganador';
+    b.className='btn btn-primary btn-full';
+    b.style.marginTop='12px';
+    b.textContent=`✓ Confirmar "${topTexto}" como ganador (${items[0][1]} de ${total} votos)`;
+    b.onclick=()=>confirmarGanador(topId,topTexto);
+    lista.after(b);
+  }
 }
 
 function confirmarGanador(id,texto){
