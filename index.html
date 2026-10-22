@@ -627,9 +627,15 @@ function enviarMatriz(){
 }
 
 // ── FACILITADOR ──────────────────────────────────────────
+let facListeners = [];
 function cargarFacilitador(){
+  // Cancelar listeners anteriores para evitar duplicados
+  facListeners.forEach(({ref,fn})=>ref.off('value',fn));
+  facListeners=[];
+
   renderFasesBtns();
-  // Leer config
+
+  // Config
   DB.ref('sesion/config').once('value',snap=>{
     if(snap.exists()){
       faseActual=snap.val().fase||'retos';
@@ -644,40 +650,58 @@ function cargarFacilitador(){
       document.getElementById('card-arbol-fac').style.display='block';
     }
   });
-  // Participantes en tiempo real — escucha cualquier cambio en cualquier hijo
-  DB.ref('participantes').on('value',snap=>{
+
+  // Participantes
+  const refP=DB.ref('participantes');
+  const fnP=snap=>{
     const ps=[];
-    snap.forEach(c=>{
-      const v=c.val();
-      if(v && v.uid) ps.push(v);
-    });
+    snap.forEach(c=>{const v=c.val();if(v&&v.nombre)ps.push(v);});
     document.getElementById('s-total').textContent=ps.length;
     renderParticipantes(ps);
-  });
-  // Retos en tiempo real — contar y mostrar TODOS los retos reales
-  DB.ref('retos').on('value',snap=>{
+  };
+  refP.on('value',fnP);
+  facListeners.push({ref:refP,fn:fnP});
+
+  // Retos
+  const refR=DB.ref('retos');
+  const fnR=snap=>{
     const retos=[];
     snap.forEach(c=>{const v=c.val();if(v&&v.reto&&v.reto.trim())retos.push(v);});
     document.getElementById('s-retos').textContent=retos.length;
     renderRetosParaFacilitador(retos);
-  });
-  // Votos en tiempo real
-  DB.ref('votos').on('value',snap=>{
+  };
+  refR.on('value',fnR);
+  facListeners.push({ref:refR,fn:fnR});
+
+  // Votos
+  const refV=DB.ref('votos');
+  const fnV=snap=>{
     const vs=[];snap.forEach(c=>vs.push(c.val()));
     document.getElementById('s-votos').textContent=vs.length;
     if(vs.length){document.getElementById('card-votos-fac').style.display='block';renderFacVotos(vs);}
-  });
-  // Árbol en tiempo real
-  DB.ref('arbol_causas').on('value',snap=>{
+  };
+  refV.on('value',fnV);
+  facListeners.push({ref:refV,fn:fnV});
+
+  // Árbol causas
+  const refC=DB.ref('arbol_causas');
+  const fnC=snap=>{
     const items=[];snap.forEach(c=>items.push(c.val()));
     items.sort((a,b)=>a.ts-b.ts);
     renderArbolItems(items,document.getElementById('fac-causas'),'causas');
-  });
-  DB.ref('arbol_efectos').on('value',snap=>{
+  };
+  refC.on('value',fnC);
+  facListeners.push({ref:refC,fn:fnC});
+
+  // Árbol efectos
+  const refE=DB.ref('arbol_efectos');
+  const fnE=snap=>{
     const items=[];snap.forEach(c=>items.push(c.val()));
     items.sort((a,b)=>a.ts-b.ts);
     renderArbolItems(items,document.getElementById('fac-efectos'),'efectos');
-  });
+  };
+  refE.on('value',fnE);
+  facListeners.push({ref:refE,fn:fnE});
 }
 
 function renderRetosParaFacilitador(retos){
