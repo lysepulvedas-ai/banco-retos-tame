@@ -682,14 +682,13 @@ function cargarFacilitador(){
   refP.on('value',fnP);
   facListeners.push({ref:refP,fn:fnP});
 
-  // Retos — cachear textos para la votación
+  // Cargar retos primero, luego activar listener de votos
   const refR=DB.ref('retos');
   const fnR=snap=>{
     const retos=[];
     snap.forEach(c=>{
       const v=c.val();
       if(v&&v.reto&&v.reto.trim()){
-        // Cachear por clave del nodo Y por id interno
         retosTexto[c.key]=v.reto;
         if(v.id) retosTexto[v.id]=v.reto;
         retos.push(v);
@@ -697,18 +696,30 @@ function cargarFacilitador(){
     });
     document.getElementById('s-retos').textContent=retos.length;
     renderRetosParaFacilitador(retos);
+    // Re-renderizar votos cada vez que cambien los retos (por si el caché no estaba listo)
+    DB.ref('votos').once('value',vsnap=>{
+      const vs=[];
+      vsnap.forEach(c=>{const v=c.val();if(v&&v.retoId)vs.push(v);});
+      if(vs.length){
+        document.getElementById('card-votos-fac').style.display='block';
+        document.getElementById('s-votos').textContent=vsnap.numChildren();
+        renderFacVotos(vs,vsnap.numChildren());
+      }
+    });
   };
   refR.on('value',fnR);
   facListeners.push({ref:refR,fn:fnR});
 
-  // Votos — contar todos los registros individualmente
+  // Votos en tiempo real
   const refV=DB.ref('votos');
   const fnV=snap=>{
     const vs=[];
     snap.forEach(c=>{const v=c.val();if(v&&v.retoId)vs.push(v);});
-    // Total real de votos = número de registros en /votos
     document.getElementById('s-votos').textContent=snap.numChildren();
-    if(vs.length){document.getElementById('card-votos-fac').style.display='block';renderFacVotos(vs,snap.numChildren());}
+    if(vs.length){
+      document.getElementById('card-votos-fac').style.display='block';
+      renderFacVotos(vs,snap.numChildren());
+    }
   };
   refV.on('value',fnV);
   facListeners.push({ref:refV,fn:fnV});
