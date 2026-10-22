@@ -454,33 +454,44 @@ function enviarReto(){
   const poblacion=document.getElementById('inp-poblacion').value.trim();
   const ubicacion=document.getElementById('inp-ubicacion').value.trim();
   if(!reto){toast('Por favor describe tu reto');return;}
+  // Verificar que el participante esté registrado completamente en Firebase
+  if(!miNombre||!miCorreo||!miCelular){toast('Error: debes registrarte primero con nombre, correo y celular');mostrarPantalla('p-ingreso');return;}
   const btn=document.getElementById('btn-enviar-reto');
   btn.disabled=true;btn.textContent='Enviando…';
-  // Usar push() para generar clave única por cada reto enviado
-  const retoRef=DB.ref('retos').push();
-  miRetoId=retoRef.key;
-  retoRef.set({id:miRetoId,uid,nombre:miNombre,correo:miCorreo,celular:miCelular,org:miOrg,reto,poblacion,ubicacion,timestamp:Date.now()})
-    .then(()=>{
-      DB.ref('participantes/'+uid).update({fase:'reto-enviado',miRetoId});
-      document.getElementById('card-mi-reto-espera').style.display='block';
-      document.getElementById('txt-mi-reto-espera').textContent=reto;
-      mostrarPantalla('p-espera');
-    }).catch(()=>{toast('Error al guardar, intenta de nuevo');btn.disabled=false;btn.textContent='Enviar mi reto →';});
+  // Verificar en Firebase que el participante existe
+  DB.ref('participantes/'+uid).once('value',snap=>{
+    if(!snap.exists()||!snap.val().correo||!snap.val().celular){
+      toast('Por favor regístrate primero con todos tus datos');
+      mostrarPantalla('p-ingreso');
+      btn.disabled=false;btn.textContent='Enviar mi reto →';
+      return;
+    }
+    const p=snap.val();
+    // Usar push() para clave única
+    const retoRef=DB.ref('retos').push();
+    miRetoId=retoRef.key;
+    retoRef.set({id:miRetoId,uid,nombre:p.nombre,correo:p.correo,celular:p.celular,org:p.org||'',reto,poblacion,ubicacion,timestamp:Date.now()})
+      .then(()=>{
+        DB.ref('participantes/'+uid).update({fase:'reto-enviado',miRetoId});
+        document.getElementById('card-mi-reto-espera').style.display='block';
+        document.getElementById('txt-mi-reto-espera').textContent=reto;
+        mostrarPantalla('p-espera');
+      }).catch(()=>{toast('Error al guardar, intenta de nuevo');btn.disabled=false;btn.textContent='Enviar mi reto →';});
+  });
 }
 
 // ── FASE 2: Votación ─────────────────────────────────────
 function cargarRetosVotacion(){
   const lista=document.getElementById('lista-retos-votacion');
   lista.innerHTML='<div class="loading">Cargando retos…</div>';
-  // Escucha en tiempo real para que aparezcan todos los retos al instante
-  DB.ref('retos').on('value',snap=>{
-    const retos=[];snap.forEach(c=>retos.push(c.val()));
+  // Escucha en tiempo real — muestra TODOS los retos válidos
+  DB.ref('retos').orderByChild('timestamp').on('value',snap=>{
+    const retos=[];
+    snap.forEach(c=>{const v=c.val();if(v&&v.reto&&v.reto.trim())retos.push(v);});
     if(!retos.length){lista.innerHTML='<div class="loading">No hay retos registrados aún.</div>';return;}
-    retos.sort((a,b)=>a.timestamp-b.timestamp);
-    // Guardar selección actual para no perderla si llegan nuevos retos
     const selActual=retoVotadoId;
     lista.innerHTML=retos.map(r=>`
-      <div class="reto-card${selActual===r.id?' seleccionado':''}" id="rc-${r.id}" onclick="seleccionarReto('${r.id}')">
+      <div class="reto-card${selActual===r.id?' seleccionado':''}" id="rc-${r.id}" onclick="${yaVote?'':'seleccionarReto(\''+r.id+'\')'}">
         <div class="check-icon">✓</div>
         <div class="reto-texto">${esc(r.reto)}</div>
         <div class="reto-autor">📍 ${esc(r.ubicacion||'Tame, Arauca')} · ${esc(r.nombre||'—')}</div>
