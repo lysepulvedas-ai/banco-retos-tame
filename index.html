@@ -6,7 +6,6 @@
 <title>Banco de Retos – Sede Orinoquía</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <style>
@@ -28,7 +27,7 @@ main{flex:1;padding:20px 16px;max-width:640px;margin:0 auto;width:100%}
 .card h2{font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--verde);margin-bottom:8px}
 .card h3{font-size:1rem;font-weight:600;color:var(--verde);margin-bottom:12px}
 .card p{font-size:0.88rem;color:var(--texto-suave);line-height:1.6}
-input[type="text"],input[type="number"],textarea,select{font-family:'DM Sans',sans-serif;font-size:0.9rem;border:1.5px solid var(--borde);border-radius:8px;padding:10px 14px;background:var(--arena);color:var(--texto);width:100%;transition:border-color .15s}
+input[type="text"],input[type="email"],input[type="tel"],textarea,select{font-family:'DM Sans',sans-serif;font-size:0.9rem;border:1.5px solid var(--borde);border-radius:8px;padding:10px 14px;background:var(--arena);color:var(--texto);width:100%;transition:border-color .15s}
 input:focus,textarea:focus,select:focus{outline:none;border-color:var(--verde-claro)}
 textarea{resize:vertical;min-height:90px}
 .campo{display:flex;flex-direction:column;gap:6px}
@@ -80,15 +79,15 @@ textarea{resize:vertical;min-height:90px}
 .stat-box{background:var(--blanco);border:1px solid var(--borde);border-radius:10px;padding:14px;text-align:center}
 .stat-box .num{font-size:1.7rem;font-weight:600;color:var(--verde-claro)}
 .stat-box .lbl{font-size:0.73rem;color:var(--texto-suave);margin-top:2px}
-.participante-row{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--blanco);border:1px solid var(--borde);border-radius:8px}
+.participante-row{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--blanco);border:1px solid var(--borde);border-radius:8px;gap:8px}
 .participante-row .nombre{font-size:0.88rem;font-weight:600}
 .participante-row .estado{font-size:0.75rem;color:var(--texto-suave)}
 .btn-fase{padding:8px 16px;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;border:1.5px solid;font-family:'DM Sans',sans-serif;transition:all .15s}
 .btn-fase-activo{background:var(--verde);color:#fff;border-color:var(--verde)}
 .btn-fase-inactivo{background:var(--blanco);color:var(--verde);border-color:var(--verde)}
-.resultado-reto{background:var(--blanco);border:1px solid var(--borde);border-radius:10px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.resultado-reto{background:var(--blanco);border:1px solid var(--borde);border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px}
 .resultado-reto.ganador{border-color:var(--verde);background:var(--verde-pale)}
-.votos-barra-wrap{flex:1;margin:0 12px}
+.votos-barra-wrap{flex:1;margin:0 10px}
 .votos-barra{height:6px;background:var(--borde);border-radius:3px;margin-top:4px}
 .votos-fill{height:100%;background:var(--verde-claro);border-radius:3px;transition:width .6s}
 .resultado-reto.ganador .votos-fill{background:var(--verde)}
@@ -106,10 +105,15 @@ textarea{resize:vertical;min-height:90px}
 .toast.visible{opacity:1}
 .loading{text-align:center;padding:32px;color:var(--texto-suave);font-size:0.88rem}
 .fases-btns{display:flex;gap:8px;flex-wrap:wrap}
-.arbol-final{background:var(--verde-pale);border-radius:10px;padding:16px;border:1px solid var(--borde)}
-.arbol-final-tronco{background:var(--verde);color:#fff;border-radius:8px;padding:14px;text-align:center;font-size:1rem;font-weight:600;margin:10px 0}
-.arbol-final-items{display:flex;flex-direction:column;gap:4px}
-.arbol-final-item{background:var(--blanco);border-radius:6px;padding:8px 12px;font-size:0.84rem;border:1px solid var(--borde)}
+.reto-fac-card{background:var(--blanco);border:1px solid var(--borde);border-radius:10px;padding:14px;margin-bottom:8px}
+.reto-fac-card .reto-fac-texto{font-size:0.88rem;line-height:1.5;color:var(--texto);margin-bottom:6px}
+.reto-fac-card .reto-fac-meta{font-size:0.75rem;color:var(--texto-suave)}
+/* Modal clave */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:200;padding:20px}
+.modal-box{background:var(--blanco);border-radius:var(--radius);padding:28px;width:100%;max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,0.2)}
+.modal-box h3{font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--verde);margin-bottom:8px}
+.modal-box p{font-size:0.85rem;color:var(--texto-suave);margin-bottom:16px}
+.modal-error{color:var(--rojo);font-size:0.82rem;margin-top:8px;display:none}
 </style>
 </head>
 <body>
@@ -135,13 +139,15 @@ textarea{resize:vertical;min-height:90px}
     <p>Esta sesión te guiará por cuatro momentos participativos. Primero escribe tu reto, luego vota, luego aporta al árbol colectivo y finalmente completa la matriz.</p>
   </div>
   <div class="card">
-    <h3>¿Cómo deseas ingresar?</h3>
+    <h3>Registro de participante</h3>
     <div style="display:flex;flex-direction:column;gap:12px">
-      <div class="campo"><label>Tu nombre completo</label><input type="text" id="inp-nombre" placeholder="Escribe tu nombre" maxlength="60"></div>
-      <div class="campo"><label>Tu organización o comunidad (opcional)</label><input type="text" id="inp-org" placeholder="Ej: Junta de Acción Comunal" maxlength="80"></div>
-      <button class="btn btn-primary btn-full" onclick="ingresarParticipante()">Entrar como participante →</button>
+      <div class="campo"><label>Nombre completo *</label><input type="text" id="inp-nombre" placeholder="Escribe tu nombre completo" maxlength="80"></div>
+      <div class="campo"><label>Correo electrónico *</label><input type="email" id="inp-correo" placeholder="ejemplo@correo.com" maxlength="100"></div>
+      <div class="campo"><label>Número de celular *</label><input type="tel" id="inp-celular" placeholder="Ej: 3001234567" maxlength="20"></div>
+      <div class="campo"><label>Organización o comunidad (opcional)</label><input type="text" id="inp-org" placeholder="Ej: Junta de Acción Comunal" maxlength="100"></div>
+      <button class="btn btn-primary btn-full" onclick="ingresarParticipante()">Entrar al encuentro →</button>
       <hr class="separador">
-      <button class="btn btn-secondary btn-full" onclick="mostrarPantalla('p-facilitador');cargarFacilitador()">Ver panel del facilitador</button>
+      <button class="btn btn-secondary btn-full" onclick="pedirClaveFacilitador()">Ver panel del facilitador</button>
     </div>
   </div>
 </div>
@@ -150,17 +156,19 @@ textarea{resize:vertical;min-height:90px}
 <div id="p-reto" class="pantalla">
   <div class="card" style="padding:16px 20px">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-      <div><div class="fase-chip"><span class="fase-dot"></span>Momento 1 de 4</div>
-        <div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--verde);margin-top:6px">Propón tu reto</div></div>
+      <div>
+        <div class="fase-chip"><span class="fase-dot"></span>Momento 1 de 4</div>
+        <div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--verde);margin-top:6px">Propón tu reto</div>
+      </div>
       <span class="tag" id="tag-nombre-reto"></span>
     </div>
   </div>
   <div class="card">
-    <div class="info-box" style="margin-bottom:16px">💡 Piensa en un problema que afecte a Arauca y que pueda resolverse de forma articulada entre la Universidad y las organizaciones.</div>
+    <div class="info-box" style="margin-bottom:16px">💡 Piensa en un problema que afecte a <strong>Tame, Arauca</strong> y que pueda resolverse de forma articulada entre la Universidad y las organizaciones.</div>
     <div style="display:flex;flex-direction:column;gap:14px">
       <div class="campo"><label>¿Cuál es el reto o problema que propones?</label><textarea id="inp-reto" placeholder="Describe el reto con claridad…" rows="4"></textarea></div>
-      <div class="campo"><label>Población directamente afectada</label><input type="text" id="inp-poblacion" placeholder="Ej: Campesinos del municipio de Tame"></div>
-      <div class="campo"><label>Ubicación territorial</label><input type="text" id="inp-ubicacion" placeholder="Ej: Vereda El Amparo, Tame – Arauca"></div>
+      <div class="campo"><label>Población directamente afectada</label><input type="text" id="inp-poblacion" placeholder="Ej: Campesinos del municipio de Tame, Arauca"></div>
+      <div class="campo"><label>Ubicación territorial en Tame, Arauca</label><input type="text" id="inp-ubicacion" placeholder="Ej: Vereda El Amparo, Tame – Arauca"></div>
       <button class="btn btn-primary btn-full" onclick="enviarReto()" id="btn-enviar-reto">Enviar mi reto →</button>
     </div>
   </div>
@@ -172,7 +180,7 @@ textarea{resize:vertical;min-height:90px}
     <div class="espera-animacion">
       <div class="grande">🕐</div>
       <h3>Reto enviado correctamente</h3>
-      <p>Espera mientras el facilitador abre la fase de votación.</p>
+      <p>Espera mientras el facilitador abre la fase de votación. Esta pantalla se actualizará automáticamente.</p>
       <div class="puntos"><span></span><span></span><span></span></div>
     </div>
   </div>
@@ -187,7 +195,7 @@ textarea{resize:vertical;min-height:90px}
   <div class="card" style="padding:16px 20px">
     <div class="fase-chip"><span class="fase-dot"></span>Momento 2 de 4</div>
     <div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--verde);margin-top:6px">Vota por el reto más importante</div>
-    <p style="font-size:0.82rem;color:var(--texto-suave);margin-top:4px">Lee todos los retos y selecciona el que consideres más urgente.</p>
+    <p style="font-size:0.82rem;color:var(--texto-suave);margin-top:4px">Lee todos los retos y selecciona el que consideres más urgente para Tame, Arauca.</p>
   </div>
   <div id="lista-retos-votacion" style="display:flex;flex-direction:column;gap:10px"><div class="loading">Cargando retos…</div></div>
   <button class="btn btn-primary btn-full" onclick="enviarVoto()" id="btn-votar" disabled>Confirmar mi voto →</button>
@@ -220,7 +228,7 @@ textarea{resize:vertical;min-height:90px}
     <div class="tronco-box" id="tronco-reto-ganador"></div>
   </div>
   <div class="card">
-    <div class="info-box" style="margin-bottom:16px">🌳 Agrega una causa y un efecto del problema. Todos construimos el árbol juntos.</div>
+    <div class="info-box" style="margin-bottom:16px">🌳 Agrega causas y efectos del problema. Todos construimos el árbol juntos en tiempo real.</div>
     <div style="display:flex;flex-direction:column;gap:14px">
       <div class="campo"><label>🌱 Una causa del problema (¿por qué ocurre?)</label><input type="text" id="inp-causa" placeholder="Ej: Falta de infraestructura vial"></div>
       <button class="btn btn-secondary btn-full" onclick="enviarCausa()" id="btn-causa">Agregar causa</button>
@@ -237,7 +245,7 @@ textarea{resize:vertical;min-height:90px}
       <div class="arbol-seccion"><div class="arbol-label raices">🌱 Causas</div><div class="arbol-items" id="arbol-causas"><div style="font-size:0.82rem;color:var(--texto-suave)">Aún no hay causas…</div></div></div>
     </div>
   </div>
-  <button class="btn btn-primary btn-full" onclick="mostrarPantalla('p-matriz');document.getElementById('matriz-reto').textContent=retoGanadorTexto">Continuar a la Matriz →</button>
+  <button class="btn btn-primary btn-full" onclick="irMatriz()">Continuar a la Matriz →</button>
 </div>
 
 <!-- MATRIZ -->
@@ -263,11 +271,7 @@ textarea{resize:vertical;min-height:90px}
   <div class="success-box">
     <div class="icono">🎉</div>
     <h3>¡Participación completada!</h3>
-    <p>Gracias por tu aporte. Tus respuestas quedan guardadas en el banco de retos.</p>
-  </div>
-  <div class="card">
-    <h3 style="margin-bottom:14px">Árbol colectivo construido hoy</h3>
-    <div class="arbol-final" id="arbol-final-display"></div>
+    <p>Gracias por tu aporte. Tus respuestas quedan guardadas en el banco de retos de la Sede Orinoquía – Tame, Arauca.</p>
   </div>
   <div class="card"><p style="font-size:0.85rem;color:var(--texto-suave);text-align:center">Ahora comienza la <strong>socialización final</strong>. El facilitador guiará la presentación.</p></div>
 </div>
@@ -278,47 +282,84 @@ textarea{resize:vertical;min-height:90px}
     <div style="font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--verde)">Panel del facilitador</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn btn-secondary btn-sm" onclick="exportarExcel()">Exportar Excel</button>
+      <button class="btn btn-secondary btn-sm" onclick="cargarFacilitador()">⟳ Actualizar</button>
       <button class="btn btn-secondary btn-sm" onclick="mostrarPantalla('p-ingreso')">← Salir</button>
     </div>
   </div>
+
+  <!-- Control fases -->
   <div class="card">
     <h3 style="margin-bottom:12px">Control de fases</h3>
     <div class="fases-btns" id="fases-btns"></div>
     <div style="font-size:0.78rem;color:var(--texto-suave);margin-top:10px" id="fase-desc"></div>
   </div>
+
+  <!-- Stats -->
   <div class="stats-row">
     <div class="stat-box"><div class="num" id="s-total">0</div><div class="lbl">Participantes</div></div>
     <div class="stat-box"><div class="num" id="s-retos">0</div><div class="lbl">Retos enviados</div></div>
     <div class="stat-box"><div class="num" id="s-votos">0</div><div class="lbl">Votos</div></div>
   </div>
-  <div class="card" id="card-ganador-fac" style="display:none">
-    <div style="font-size:0.75rem;font-weight:600;color:var(--texto-suave);margin-bottom:8px">🏆 RETO SELECCIONADO</div>
-    <div class="tronco-box" id="facilitador-ganador"></div>
+
+  <!-- Retos enviados -->
+  <div class="card">
+    <h3 style="margin-bottom:12px">Retos enviados por los participantes</h3>
+    <div id="fac-lista-retos"><div class="loading">Cargando retos…</div></div>
   </div>
+
+  <!-- Votación -->
   <div class="card" id="card-votos-fac" style="display:none">
     <h3 style="margin-bottom:12px">Resultados de votación</h3>
     <div id="fac-votos-lista" style="display:flex;flex-direction:column;gap:8px"></div>
   </div>
-  <div class="card">
-    <h3 style="margin-bottom:12px">Participantes</h3>
-    <div id="lista-participantes" style="display:flex;flex-direction:column;gap:8px"><div class="loading">Cargando…</div></div>
+
+  <!-- Ganador -->
+  <div class="card" id="card-ganador-fac" style="display:none">
+    <div style="font-size:0.75rem;font-weight:600;color:var(--texto-suave);margin-bottom:8px">🏆 RETO SELECCIONADO</div>
+    <div class="tronco-box" id="facilitador-ganador"></div>
   </div>
+
+  <!-- Árbol tiempo real -->
   <div class="card" id="card-arbol-fac" style="display:none">
     <h3 style="margin-bottom:14px">Árbol colectivo (tiempo real)</h3>
     <div class="arbol-wrap">
-      <div class="arbol-seccion"><div class="arbol-label ramas">🌿 Efectos</div><div class="arbol-items" id="fac-efectos"></div></div>
+      <div class="arbol-seccion"><div class="arbol-label ramas">🌿 Efectos</div><div class="arbol-items" id="fac-efectos"><div style="font-size:0.82rem;color:var(--texto-suave)">Sin efectos aún…</div></div></div>
       <div class="arbol-seccion" style="margin:12px 0"><div class="arbol-label tronco">🪵 Problema central</div><div class="tronco-box" id="fac-tronco" style="font-size:0.88rem"></div></div>
-      <div class="arbol-seccion"><div class="arbol-label raices">🌱 Causas</div><div class="arbol-items" id="fac-causas"></div></div>
+      <div class="arbol-seccion"><div class="arbol-label raices">🌱 Causas</div><div class="arbol-items" id="fac-causas"><div style="font-size:0.82rem;color:var(--texto-suave)">Sin causas aún…</div></div></div>
     </div>
+  </div>
+
+  <!-- Participantes -->
+  <div class="card">
+    <h3 style="margin-bottom:12px">Lista de participantes</h3>
+    <div id="lista-participantes" style="display:flex;flex-direction:column;gap:8px"><div class="loading">Cargando…</div></div>
   </div>
 </div>
 
 </main>
 </div>
+
+<!-- Modal clave facilitador -->
+<div class="modal-overlay" id="modal-clave" style="display:none">
+  <div class="modal-box">
+    <h3>🔐 Acceso al facilitador</h3>
+    <p>Ingresa la clave para acceder al panel de control.</p>
+    <div class="campo">
+      <label>Clave de acceso</label>
+      <input type="password" id="inp-clave" placeholder="••••" maxlength="10" onkeydown="if(event.key==='Enter')verificarClave()">
+    </div>
+    <div class="modal-error" id="error-clave">Clave incorrecta, intenta de nuevo.</div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-primary btn-full" onclick="verificarClave()">Entrar</button>
+      <button class="btn btn-secondary" onclick="cerrarModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
-// ── Firebase config ──────────────────────────────────────
+// ── Firebase ─────────────────────────────────────────────
 const firebaseConfig = {
   apiKey: "AIzaSyCR7Xuua_vn0vB546y8v3C_wgkBqfg1HyY",
   authDomain: "banco-retos-tame.firebaseapp.com",
@@ -329,17 +370,18 @@ const firebaseConfig = {
   appId: "1:70190450091:web:2f6d43df11fb07ad503eee"
 };
 firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+const DB = firebase.database();
 
 // ── Estado ───────────────────────────────────────────────
-let uid = localStorage.getItem('br_uid') || (()=>{const id=Math.random().toString(36).slice(2,10);localStorage.setItem('br_uid',id);return id;})();
-let miNombre='', miOrg='', miRetoId=null, retoVotadoId=null, yaVote=false;
-let faseActual='retos', retoGanadorId=null, retoGanadorTexto='';
+const CLAVE_FACILITADOR = '2411';
+let uid = localStorage.getItem('br_uid') || (()=>{const i=Math.random().toString(36).slice(2,10);localStorage.setItem('br_uid',i);return i;})();
+let miNombre='',miCorreo='',miCelular='',miOrg='',miRetoId=null,retoVotadoId=null,yaVote=false;
+let faseActual='retos',retoGanadorId=null,retoGanadorTexto='';
 
 const FASES=[
   {id:'retos',label:'1 · Propuesta de retos',desc:'Los participantes escriben y envían su reto.'},
-  {id:'votacion',label:'2 · Votación',desc:'Todos votan por el reto más importante.'},
-  {id:'arbol',label:'3 · Árbol colectivo',desc:'Cada persona aporta causas y efectos.'},
+  {id:'votacion',label:'2 · Votación',desc:'Todos leen y votan por el reto más importante.'},
+  {id:'arbol',label:'3 · Árbol colectivo',desc:'Cada persona aporta causas y efectos al árbol compartido.'},
   {id:'socializacion',label:'4 · Socialización',desc:'Cierre y presentación de resultados.'},
 ];
 
@@ -349,17 +391,36 @@ function mostrarPantalla(id){document.querySelectorAll('.pantalla').forEach(p=>p
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function uid4(){return Math.random().toString(36).slice(2,10);}
 
+// ── Modal clave ──────────────────────────────────────────
+function pedirClaveFacilitador(){
+  document.getElementById('inp-clave').value='';
+  document.getElementById('error-clave').style.display='none';
+  document.getElementById('modal-clave').style.display='flex';
+  setTimeout(()=>document.getElementById('inp-clave').focus(),100);
+}
+function cerrarModal(){document.getElementById('modal-clave').style.display='none';}
+function verificarClave(){
+  const clave=document.getElementById('inp-clave').value.trim();
+  if(clave===CLAVE_FACILITADOR){
+    cerrarModal();
+    mostrarPantalla('p-facilitador');
+    cargarFacilitador();
+  } else {
+    document.getElementById('error-clave').style.display='block';
+    document.getElementById('inp-clave').value='';
+    document.getElementById('inp-clave').focus();
+  }
+}
+
 // ── Escuchar fase global ─────────────────────────────────
-db.ref('sesion/config').on('value', snap=>{
-  if(!snap.exists()) return;
+DB.ref('sesion/config').on('value',snap=>{
+  if(!snap.exists())return;
   const d=snap.val();
   const nueva=d.fase||'retos';
   retoGanadorId=d.retoGanadorId||null;
   retoGanadorTexto=d.retoGanadorTexto||'';
-  if(nueva!==faseActual){
-    faseActual=nueva;
-    reaccionarFase();
-  } else { faseActual=nueva; }
+  if(nueva!==faseActual){faseActual=nueva;reaccionarFase();}
+  else{faseActual=nueva;}
 });
 
 function reaccionarFase(){
@@ -371,12 +432,16 @@ function reaccionarFase(){
 // ── INGRESO ──────────────────────────────────────────────
 function ingresarParticipante(){
   miNombre=document.getElementById('inp-nombre').value.trim();
+  miCorreo=document.getElementById('inp-correo').value.trim();
+  miCelular=document.getElementById('inp-celular').value.trim();
   miOrg=document.getElementById('inp-org').value.trim();
   if(!miNombre){toast('Por favor escribe tu nombre');return;}
-  db.ref('participantes/'+uid).set({uid,nombre:miNombre,org:miOrg,timestamp:Date.now(),fase:'ingreso'});
+  if(!miCorreo){toast('Por favor escribe tu correo electrónico');return;}
+  if(!miCelular){toast('Por favor escribe tu número de celular');return;}
+  DB.ref('participantes/'+uid).set({uid,nombre:miNombre,correo:miCorreo,celular:miCelular,org:miOrg,timestamp:Date.now(),fase:'ingreso'});
   document.getElementById('tag-nombre-reto').textContent=miNombre;
-  db.ref('sesion/config').once('value',snap=>{
-    if(snap.exists()){faseActual=snap.val().fase||'retos';retoGanadorTexto=snap.val().retoGanadorTexto||'';}
+  DB.ref('sesion/config').once('value',snap=>{
+    if(snap.exists()){faseActual=snap.val().fase||'retos';retoGanadorTexto=snap.val().retoGanadorTexto||'';retoGanadorId=snap.val().retoGanadorId||null;}
     if(faseActual==='votacion'){cargarRetosVotacion();mostrarPantalla('p-votacion');}
     else if(faseActual==='arbol'){iniciarArbol();mostrarPantalla('p-arbol');}
     else{mostrarPantalla('p-reto');}
@@ -392,9 +457,9 @@ function enviarReto(){
   const btn=document.getElementById('btn-enviar-reto');
   btn.disabled=true;btn.textContent='Enviando…';
   miRetoId='reto_'+uid;
-  db.ref('retos/'+miRetoId).set({id:miRetoId,uid,nombre:miNombre,org:miOrg,reto,poblacion,ubicacion,timestamp:Date.now()})
+  DB.ref('retos/'+miRetoId).set({id:miRetoId,uid,nombre:miNombre,correo:miCorreo,celular:miCelular,org:miOrg,reto,poblacion,ubicacion,timestamp:Date.now()})
     .then(()=>{
-      db.ref('participantes/'+uid).update({fase:'reto-enviado'});
+      DB.ref('participantes/'+uid).update({fase:'reto-enviado'});
       document.getElementById('card-mi-reto-espera').style.display='block';
       document.getElementById('txt-mi-reto-espera').textContent=reto;
       mostrarPantalla('p-espera');
@@ -405,20 +470,18 @@ function enviarReto(){
 function cargarRetosVotacion(){
   const lista=document.getElementById('lista-retos-votacion');
   lista.innerHTML='<div class="loading">Cargando retos…</div>';
-  db.ref('retos').once('value',snap=>{
-    const retos=[];
-    snap.forEach(c=>retos.push(c.val()));
-    if(!retos.length){lista.innerHTML='<div class="loading">No hay retos aún.</div>';return;}
+  DB.ref('retos').once('value',snap=>{
+    const retos=[];snap.forEach(c=>retos.push(c.val()));
+    if(!retos.length){lista.innerHTML='<div class="loading">No hay retos registrados aún.</div>';return;}
     retos.sort((a,b)=>a.timestamp-b.timestamp);
     lista.innerHTML=retos.map(r=>`
       <div class="reto-card" id="rc-${r.id}" onclick="seleccionarReto('${r.id}')">
         <div class="check-icon">✓</div>
         <div class="reto-texto">${esc(r.reto)}</div>
-        <div class="reto-autor">📍 ${esc(r.ubicacion||'—')} · ${esc(r.poblacion||'—')}</div>
+        <div class="reto-autor">📍 ${esc(r.ubicacion||'Tame, Arauca')} · ${esc(r.nombre||'—')}</div>
       </div>`).join('');
   });
-  // Resultados en tiempo real para pantalla de espera
-  db.ref('votos').on('value',snap=>{
+  DB.ref('votos').on('value',snap=>{
     const vs=[];snap.forEach(c=>vs.push(c.val()));
     renderResultadosVotos(vs,document.getElementById('lista-resultados-votos'));
   });
@@ -436,9 +499,9 @@ function enviarVoto(){
   if(!retoVotadoId){toast('Selecciona un reto para votar');return;}
   if(yaVote){toast('Ya enviaste tu voto');return;}
   const btn=document.getElementById('btn-votar');btn.disabled=true;btn.textContent='Registrando…';
-  db.ref('votos/'+uid).set({uid,nombre:miNombre,retoId:retoVotadoId,timestamp:Date.now()})
+  DB.ref('votos/'+uid).set({uid,nombre:miNombre,retoId:retoVotadoId,timestamp:Date.now()})
     .then(()=>{
-      db.ref('participantes/'+uid).update({fase:'voto-enviado',votoRetoId:retoVotadoId});
+      DB.ref('participantes/'+uid).update({fase:'voto-enviado',votoRetoId:retoVotadoId});
       yaVote=true;mostrarPantalla('p-espera-arbol');
     }).catch(()=>{toast('Error al registrar voto');btn.disabled=false;btn.textContent='Confirmar mi voto →';});
 }
@@ -450,14 +513,13 @@ function renderResultadosVotos(votos,contenedor){
   const items=Object.entries(conteo).sort((a,b)=>b[1]-a[1]);
   if(!items.length){contenedor.innerHTML='<div class="loading">Aún no hay votos…</div>';return;}
   const maxV=items[0][1];
-  // Obtener textos de retos
-  db.ref('retos').once('value',snap=>{
+  DB.ref('retos').once('value',snap=>{
     const textos={};snap.forEach(c=>{const r=c.val();textos[r.id]=r.reto;});
     contenedor.innerHTML=items.map(([id,n],i)=>`
       <div class="resultado-reto ${i===0?'ganador':''}">
         ${i===0?'<span>👑</span>':''}
         <div class="votos-barra-wrap">
-          <div style="font-size:0.82rem;line-height:1.3">${esc(textos[id]||id)}</div>
+          <div style="font-size:0.82rem;line-height:1.3">${esc(textos[id]||'—')}</div>
           <div class="votos-barra"><div class="votos-fill" style="width:${Math.round(n/maxV*100)}%"></div></div>
         </div>
         <span class="votos-num">${n} voto${n!==1?'s':''}</span>
@@ -467,16 +529,16 @@ function renderResultadosVotos(votos,contenedor){
 
 // ── FASE 3: Árbol ────────────────────────────────────────
 function iniciarArbol(){
-  document.getElementById('tronco-reto-ganador').textContent=retoGanadorTexto;
-  document.getElementById('arbol-tronco').textContent=retoGanadorTexto;
-  document.getElementById('matriz-reto').textContent=retoGanadorTexto;
-  db.ref('arbol_causas').on('value',snap=>{
+  document.getElementById('tronco-reto-ganador').textContent=retoGanadorTexto||'Reto seleccionado';
+  document.getElementById('arbol-tronco').textContent=retoGanadorTexto||'Reto seleccionado';
+  document.getElementById('matriz-reto').textContent=retoGanadorTexto||'Reto seleccionado';
+  DB.ref('arbol_causas').on('value',snap=>{
     const items=[];snap.forEach(c=>items.push(c.val()));
     items.sort((a,b)=>a.ts-b.ts);
     renderArbolItems(items,document.getElementById('arbol-causas'),'causas');
     renderArbolItems(items,document.getElementById('fac-causas'),'causas');
   });
-  db.ref('arbol_efectos').on('value',snap=>{
+  DB.ref('arbol_efectos').on('value',snap=>{
     const items=[];snap.forEach(c=>items.push(c.val()));
     items.sort((a,b)=>a.ts-b.ts);
     renderArbolItems(items,document.getElementById('arbol-efectos'),'efectos');
@@ -494,7 +556,7 @@ function enviarCausa(){
   const texto=document.getElementById('inp-causa').value.trim();
   if(!texto){toast('Escribe una causa');return;}
   const btn=document.getElementById('btn-causa');btn.disabled=true;
-  db.ref('arbol_causas/'+uid4()).set({texto,nombre:miNombre,uid,ts:Date.now()})
+  DB.ref('arbol_causas/'+uid4()).set({texto,nombre:miNombre,uid,ts:Date.now()})
     .then(()=>{document.getElementById('inp-causa').value='';btn.disabled=false;toast('Causa agregada ✓');})
     .catch(()=>{toast('Error al guardar');btn.disabled=false;});
 }
@@ -503,9 +565,14 @@ function enviarEfecto(){
   const texto=document.getElementById('inp-efecto').value.trim();
   if(!texto){toast('Escribe un efecto');return;}
   const btn=document.getElementById('btn-efecto');btn.disabled=true;
-  db.ref('arbol_efectos/'+uid4()).set({texto,nombre:miNombre,uid,ts:Date.now()})
+  DB.ref('arbol_efectos/'+uid4()).set({texto,nombre:miNombre,uid,ts:Date.now()})
     .then(()=>{document.getElementById('inp-efecto').value='';btn.disabled=false;toast('Efecto agregado ✓');})
     .catch(()=>{toast('Error al guardar');btn.disabled=false;});
+}
+
+function irMatriz(){
+  document.getElementById('matriz-reto').textContent=retoGanadorTexto||'Reto seleccionado';
+  mostrarPantalla('p-matriz');
 }
 
 // ── FASE 4: Matriz ───────────────────────────────────────
@@ -513,40 +580,30 @@ function enviarMatriz(){
   const obj=document.getElementById('m-objetivo').value.trim();
   if(!obj){toast('Por favor escribe el objetivo');return;}
   const btn=document.getElementById('btn-enviar-matriz');btn.disabled=true;btn.textContent='Enviando…';
-  db.ref('matrices/'+uid).set({
-    uid,nombre:miNombre,org:miOrg,reto:retoGanadorTexto,
+  DB.ref('matrices/'+uid).set({
+    uid,nombre:miNombre,correo:miCorreo,celular:miCelular,org:miOrg,
+    reto:retoGanadorTexto,
     objetivo:obj,
     justificacion:document.getElementById('m-justificacion').value.trim(),
     acciones:document.getElementById('m-acciones').value.trim(),
     recursos:document.getElementById('m-recursos').value.trim(),
     timestamp:Date.now()
   }).then(()=>{
-    db.ref('participantes/'+uid).update({fase:'completo'});
+    DB.ref('participantes/'+uid).update({fase:'completo'});
     mostrarPantalla('p-final');
-    renderArbolFinal();
   }).catch(()=>{toast('Error al guardar');btn.disabled=false;btn.textContent='Enviar mi matriz →';});
-}
-
-function renderArbolFinal(){
-  const c=document.getElementById('arbol-final-display');
-  Promise.all([db.ref('arbol_causas').once('value'),db.ref('arbol_efectos').once('value')]).then(([sc,se])=>{
-    const causas=[],efectos=[];
-    sc.forEach(x=>causas.push(x.val().texto));
-    se.forEach(x=>efectos.push(x.val().texto));
-    c.innerHTML=`
-      <div class="arbol-label ramas">🌿 Efectos</div>
-      <div class="arbol-final-items" style="margin-bottom:12px">${efectos.map(t=>`<div class="arbol-final-item">${esc(t)}</div>`).join('')||'<div style="font-size:0.82rem;color:var(--texto-suave)">—</div>'}</div>
-      <div class="arbol-final-tronco">${esc(retoGanadorTexto)}</div>
-      <div class="arbol-label raices" style="margin-top:12px">🌱 Causas</div>
-      <div class="arbol-final-items">${causas.map(t=>`<div class="arbol-final-item">${esc(t)}</div>`).join('')||'<div style="font-size:0.82rem;color:var(--texto-suave)">—</div>'}</div>`;
-  });
 }
 
 // ── FACILITADOR ──────────────────────────────────────────
 function cargarFacilitador(){
   renderFasesBtns();
-  db.ref('sesion/config').once('value',snap=>{
-    if(snap.exists()){faseActual=snap.val().fase||'retos';retoGanadorTexto=snap.val().retoGanadorTexto||'';retoGanadorId=snap.val().retoGanadorId||null;}
+  // Leer config
+  DB.ref('sesion/config').once('value',snap=>{
+    if(snap.exists()){
+      faseActual=snap.val().fase||'retos';
+      retoGanadorTexto=snap.val().retoGanadorTexto||'';
+      retoGanadorId=snap.val().retoGanadorId||null;
+    }
     renderFasesBtns();
     if(retoGanadorTexto){
       document.getElementById('card-ganador-fac').style.display='block';
@@ -555,55 +612,79 @@ function cargarFacilitador(){
       document.getElementById('card-arbol-fac').style.display='block';
     }
   });
-  db.ref('participantes').on('value',snap=>{
+  // Participantes en tiempo real
+  DB.ref('participantes').on('value',snap=>{
     const ps=[];snap.forEach(c=>ps.push(c.val()));
     document.getElementById('s-total').textContent=ps.length;
     document.getElementById('s-retos').textContent=ps.filter(p=>['reto-enviado','voto-enviado','completo'].includes(p.fase)).length;
     renderParticipantes(ps);
   });
-  db.ref('votos').on('value',snap=>{
+  // Retos en tiempo real
+  DB.ref('retos').on('value',snap=>{
+    const retos=[];snap.forEach(c=>retos.push(c.val()));
+    renderRetosParaFacilitador(retos);
+  });
+  // Votos en tiempo real
+  DB.ref('votos').on('value',snap=>{
     const vs=[];snap.forEach(c=>vs.push(c.val()));
     document.getElementById('s-votos').textContent=vs.length;
     if(vs.length){document.getElementById('card-votos-fac').style.display='block';renderFacVotos(vs);}
   });
-  db.ref('arbol_causas').on('value',snap=>{
+  // Árbol en tiempo real
+  DB.ref('arbol_causas').on('value',snap=>{
     const items=[];snap.forEach(c=>items.push(c.val()));
     items.sort((a,b)=>a.ts-b.ts);
     renderArbolItems(items,document.getElementById('fac-causas'),'causas');
   });
-  db.ref('arbol_efectos').on('value',snap=>{
+  DB.ref('arbol_efectos').on('value',snap=>{
     const items=[];snap.forEach(c=>items.push(c.val()));
     items.sort((a,b)=>a.ts-b.ts);
     renderArbolItems(items,document.getElementById('fac-efectos'),'efectos');
   });
 }
 
-function renderParticipantes(ps){
-  const c=document.getElementById('lista-participantes');
-  if(!ps.length){c.innerHTML='<div class="loading">Ningún participante aún.</div>';return;}
-  const etiquetas={ingreso:'Ingresó','reto-enviado':'Reto enviado ✓','voto-enviado':'Voto enviado ✓',completo:'Completó todo ✓'};
-  const badges={ingreso:'badge-rojo','reto-enviado':'badge-amarillo','voto-enviado':'badge-amarillo',completo:'badge-verde'};
-  c.innerHTML=ps.sort((a,b)=>b.timestamp-a.timestamp).map(p=>`
-    <div class="participante-row">
-      <div><div class="nombre">${esc(p.nombre||'—')}</div><div class="estado">${esc(p.org||'')}</div></div>
-      <span class="badge ${badges[p.fase]||'badge-rojo'}">${etiquetas[p.fase]||'Ingresó'}</span>
+function renderRetosParaFacilitador(retos){
+  const c=document.getElementById('fac-lista-retos');
+  if(!retos.length){c.innerHTML='<div class="loading">Aún no hay retos enviados.</div>';return;}
+  retos.sort((a,b)=>a.timestamp-b.timestamp);
+  c.innerHTML=retos.map((r,i)=>`
+    <div class="reto-fac-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-weight:600;font-size:0.88rem">${esc(r.nombre||'—')}</span>
+        <span class="tag">#${i+1}</span>
+      </div>
+      <div class="reto-fac-texto">${esc(r.reto)}</div>
+      <div class="reto-fac-meta">📍 ${esc(r.ubicacion||'Tame, Arauca')} · 👥 ${esc(r.poblacion||'—')}</div>
+      ${r.org?`<div class="reto-fac-meta">🏛️ ${esc(r.org)}</div>`:''}
     </div>`).join('');
 }
 
-function renderFacesBtns(){renderFasesBtns();}
-function renderFasesBtns(){
-  const c=document.getElementById('fases-btns');
-  if(!c)return;
-  c.innerHTML=FASES.map(f=>`<button class="btn-fase ${f.id===faseActual?'btn-fase-activo':'btn-fase-inactivo'}" onclick="cambiarFase('${f.id}')">${f.label}</button>`).join('');
-  const cf=FASES.find(f=>f.id===faseActual);
-  const d=document.getElementById('fase-desc');
-  if(d)d.textContent=cf?cf.desc:'';
+function renderParticipantes(ps){
+  const c=document.getElementById('lista-participantes');
+  if(!ps.length){c.innerHTML='<div class="loading">Ningún participante aún.</div>';return;}
+  const et={ingreso:'Ingresó','reto-enviado':'Reto ✓','voto-enviado':'Voto ✓',completo:'Completó ✓'};
+  const bg={ingreso:'badge-rojo','reto-enviado':'badge-amarillo','voto-enviado':'badge-amarillo',completo:'badge-verde'};
+  c.innerHTML=ps.sort((a,b)=>b.timestamp-a.timestamp).map(p=>`
+    <div class="participante-row">
+      <div>
+        <div class="nombre">${esc(p.nombre||'—')}</div>
+        <div class="estado">${esc(p.correo||'')}${p.celular?' · '+esc(p.celular):''}</div>
+      </div>
+      <span class="badge ${bg[p.fase]||'badge-rojo'}">${et[p.fase]||'Ingresó'}</span>
+    </div>`).join('');
 }
 
-function cambiarFase(nuevaFase){
-  if(nuevaFase===faseActual)return;
-  db.ref('sesion/config').set({fase:nuevaFase,retoGanadorId:retoGanadorId||null,retoGanadorTexto:retoGanadorTexto||'',ts:Date.now()})
-    .then(()=>{faseActual=nuevaFase;renderFasesBtns();toast('Fase: '+FASES.find(f=>f.id===nuevaFase)?.label);})
+function renderFasesBtns(){
+  const c=document.getElementById('fases-btns');if(!c)return;
+  c.innerHTML=FASES.map(f=>`<button class="btn-fase ${f.id===faseActual?'btn-fase-activo':'btn-fase-inactivo'}" onclick="cambiarFase('${f.id}')">${f.label}</button>`).join('');
+  const cf=FASES.find(f=>f.id===faseActual);
+  const d=document.getElementById('fase-desc');if(d&&cf)d.textContent=cf.desc;
+}
+
+function cambiarFase(nueva){
+  if(nueva===faseActual)return;
+  DB.ref('sesion/config').set({fase:nueva,retoGanadorId:retoGanadorId||null,retoGanadorTexto:retoGanadorTexto||'',ts:Date.now()})
+    .then(()=>{faseActual=nueva;renderFasesBtns();toast('Fase: '+FASES.find(f=>f.id===nueva)?.label);})
     .catch(()=>toast('Error al cambiar fase'));
 }
 
@@ -612,24 +693,25 @@ function renderFacVotos(votos){
   votos.forEach(v=>{conteo[v.retoId]=(conteo[v.retoId]||0)+1;});
   const items=Object.entries(conteo).sort((a,b)=>b[1]-a[1]);
   const maxV=items[0]?.[1]||1;
-  db.ref('retos').once('value',snap=>{
+  DB.ref('retos').once('value',snap=>{
     const textos={};snap.forEach(c=>{const r=c.val();textos[r.id]=r.reto;});
     const lista=document.getElementById('fac-votos-lista');
     lista.innerHTML=items.map(([id,n],i)=>`
       <div class="resultado-reto ${i===0?'ganador':''}">
         ${i===0?'<span>👑</span>':''}
         <div class="votos-barra-wrap">
-          <div style="font-size:0.82rem;line-height:1.3">${esc(textos[id]||id)}</div>
+          <div style="font-size:0.82rem;line-height:1.3">${esc(textos[id]||'—')}</div>
           <div class="votos-barra"><div class="votos-fill" style="width:${Math.round(n/maxV*100)}%"></div></div>
         </div>
         <span class="votos-num">${n} voto${n!==1?'s':''}</span>
       </div>`).join('');
+    // Botón confirmar ganador
     if(items.length&&!retoGanadorId){
       const topId=items[0][0],topTexto=textos[topId]||topId;
       if(!document.getElementById('btn-confirmar-ganador')){
         const b=document.createElement('button');
         b.id='btn-confirmar-ganador';b.className='btn btn-primary btn-full';b.style.marginTop='12px';
-        b.textContent='Confirmar este reto como ganador →';
+        b.textContent='✓ Confirmar este reto como ganador';
         b.onclick=()=>confirmarGanador(topId,topTexto);
         lista.after(b);
       }
@@ -638,7 +720,7 @@ function renderFacVotos(votos){
 }
 
 function confirmarGanador(id,texto){
-  db.ref('sesion/config').update({retoGanadorId:id,retoGanadorTexto:texto}).then(()=>{
+  DB.ref('sesion/config').update({retoGanadorId:id,retoGanadorTexto:texto}).then(()=>{
     retoGanadorId=id;retoGanadorTexto=texto;
     document.getElementById('card-ganador-fac').style.display='block';
     document.getElementById('facilitador-ganador').textContent=texto;
@@ -652,29 +734,38 @@ function confirmarGanador(id,texto){
 // ── Exportar Excel ───────────────────────────────────────
 function exportarExcel(){
   Promise.all([
-    db.ref('retos').once('value'),
-    db.ref('votos').once('value'),
-    db.ref('arbol_causas').once('value'),
-    db.ref('arbol_efectos').once('value'),
-    db.ref('matrices').once('value'),
-  ]).then(([sr,sv,sc,se,sm])=>{
-    const retos=[],votos=[],causas=[],efectos=[],matrices=[];
+    DB.ref('participantes').once('value'),
+    DB.ref('retos').once('value'),
+    DB.ref('votos').once('value'),
+    DB.ref('arbol_causas').once('value'),
+    DB.ref('arbol_efectos').once('value'),
+    DB.ref('matrices').once('value'),
+  ]).then(([sp,sr,sv,sc,se,sm])=>{
+    const participantes=[],retos=[],votos=[],causas=[],efectos=[],matrices=[];
+    sp.forEach(c=>participantes.push(c.val()));
     sr.forEach(c=>retos.push(c.val()));
     sv.forEach(c=>votos.push(c.val()));
     sc.forEach(c=>causas.push(c.val()));
     se.forEach(c=>efectos.push(c.val()));
     sm.forEach(c=>matrices.push(c.val()));
     const wb=XLSX.utils.book_new();
-    const wsR=XLSX.utils.json_to_sheet(retos.map(r=>({'Nombre':r.nombre||'','Organización':r.org||'','Reto':r.reto||'','Población':r.poblacion||'','Ubicación':r.ubicacion||'','Votos':votos.filter(v=>v.retoId===r.id).length,'Fecha':r.timestamp?new Date(r.timestamp).toLocaleString('es-CO'):''})));
-    wsR['!cols']=[{wch:22},{wch:30},{wch:50},{wch:25},{wch:25},{wch:8},{wch:20}];
+    // Participantes
+    const wsP=XLSX.utils.json_to_sheet(participantes.map(p=>({'Nombre':p.nombre||'','Correo':p.correo||'','Celular':p.celular||'','Organización':p.org||'','Estado':p.fase||'','Fecha':p.timestamp?new Date(p.timestamp).toLocaleString('es-CO'):''})));
+    wsP['!cols']=[{wch:25},{wch:30},{wch:15},{wch:30},{wch:15},{wch:20}];
+    XLSX.utils.book_append_sheet(wb,wsP,'Participantes');
+    // Retos
+    const wsR=XLSX.utils.json_to_sheet(retos.map(r=>({'Nombre':r.nombre||'','Correo':r.correo||'','Celular':r.celular||'','Organización':r.org||'','Reto':r.reto||'','Población':r.poblacion||'','Ubicación':r.ubicacion||'','Votos':votos.filter(v=>v.retoId===r.id).length})));
+    wsR['!cols']=[{wch:25},{wch:30},{wch:15},{wch:30},{wch:50},{wch:25},{wch:25},{wch:8}];
     XLSX.utils.book_append_sheet(wb,wsR,'Retos');
-    const arbolData=[...efectos.map(e=>({Tipo:'Efecto',Contenido:e.texto||'',Autor:e.nombre||''})),{Tipo:'PROBLEMA CENTRAL',Contenido:retoGanadorTexto,Autor:''}, ...causas.map(c=>({Tipo:'Causa',Contenido:c.texto||'',Autor:c.nombre||''}))];
-    const wsA=XLSX.utils.json_to_sheet(arbolData);
+    // Árbol
+    const arbol=[...efectos.map(e=>({Tipo:'Efecto',Contenido:e.texto||'',Autor:e.nombre||''})),{Tipo:'PROBLEMA CENTRAL',Contenido:retoGanadorTexto,Autor:''},...causas.map(c=>({Tipo:'Causa',Contenido:c.texto||'',Autor:c.nombre||''}))];
+    const wsA=XLSX.utils.json_to_sheet(arbol);
     wsA['!cols']=[{wch:18},{wch:60},{wch:22}];
     XLSX.utils.book_append_sheet(wb,wsA,'Árbol de Problemas');
+    // Matrices
     if(matrices.length){
-      const wsM=XLSX.utils.json_to_sheet(matrices.map(m=>({'Nombre':m.nombre||'','Organización':m.org||'','Reto':m.reto||'','Objetivo':m.objetivo||'','Justificación':m.justificacion||'','Acciones':m.acciones||'','Recursos':m.recursos||'','Fecha':m.timestamp?new Date(m.timestamp).toLocaleString('es-CO'):''})));
-      wsM['!cols']=[{wch:22},{wch:30},{wch:40},{wch:40},{wch:40},{wch:40},{wch:40},{wch:20}];
+      const wsM=XLSX.utils.json_to_sheet(matrices.map(m=>({'Nombre':m.nombre||'','Correo':m.correo||'','Celular':m.celular||'','Reto':m.reto||'','Objetivo':m.objetivo||'','Justificación':m.justificacion||'','Acciones':m.acciones||'','Recursos':m.recursos||''})));
+      wsM['!cols']=[{wch:25},{wch:30},{wch:15},{wch:40},{wch:40},{wch:40},{wch:40},{wch:40}];
       XLSX.utils.book_append_sheet(wb,wsM,'Matrices');
     }
     const data=XLSX.write(wb,{bookType:'xlsx',type:'array'});
@@ -682,7 +773,7 @@ function exportarExcel(){
     const url=URL.createObjectURL(blob);
     const a=document.createElement('a');a.href=url;a.download=`Banco_Retos_Tame_${new Date().toISOString().slice(0,10)}.xlsx`;a.click();URL.revokeObjectURL(url);
     toast('Excel descargado ✓');
-  }).catch(()=>toast('Error al exportar'));
+  }).catch(e=>{toast('Error al exportar: '+e.message);});
 }
 </script>
 </body>
