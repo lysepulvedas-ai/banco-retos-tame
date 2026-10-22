@@ -644,9 +644,13 @@ function cargarFacilitador(){
       document.getElementById('card-arbol-fac').style.display='block';
     }
   });
-  // Participantes en tiempo real
+  // Participantes en tiempo real — escucha cualquier cambio en cualquier hijo
   DB.ref('participantes').on('value',snap=>{
-    const ps=[];snap.forEach(c=>ps.push(c.val()));
+    const ps=[];
+    snap.forEach(c=>{
+      const v=c.val();
+      if(v && v.uid) ps.push(v);
+    });
     document.getElementById('s-total').textContent=ps.length;
     renderParticipantes(ps);
   });
@@ -697,14 +701,20 @@ function renderParticipantes(ps){
   if(!ps.length){c.innerHTML='<div class="loading">Ningún participante aún.</div>';return;}
   const et={ingreso:'Ingresó','reto-enviado':'Reto ✓','voto-enviado':'Voto ✓',completo:'Completó ✓'};
   const bg={ingreso:'badge-rojo','reto-enviado':'badge-amarillo','voto-enviado':'badge-amarillo',completo:'badge-verde'};
-  c.innerHTML=ps.sort((a,b)=>b.timestamp-a.timestamp).map(p=>`
-    <div class="participante-row">
+  // Ordenar por timestamp ascendente para que aparezcan en orden de llegada
+  const ordenados=[...ps].sort((a,b)=>(a.timestamp||0)-(b.timestamp||0));
+  c.innerHTML='';
+  ordenados.forEach(p=>{
+    const div=document.createElement('div');
+    div.className='participante-row';
+    div.innerHTML=`
       <div>
         <div class="nombre">${esc(p.nombre||'—')}</div>
         <div class="estado">${esc(p.correo||'')}${p.celular?' · '+esc(p.celular):''}</div>
       </div>
-      <span class="badge ${bg[p.fase]||'badge-rojo'}">${et[p.fase]||'Ingresó'}</span>
-    </div>`).join('');
+      <span class="badge ${bg[p.fase]||'badge-rojo'}">${et[p.fase]||'Ingresó'}</span>`;
+    c.appendChild(div);
+  });
 }
 
 function renderFasesBtns(){
