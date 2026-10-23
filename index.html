@@ -584,15 +584,21 @@ function iniciarArbol(){
   document.getElementById('tronco-reto-ganador').textContent=retoGanadorTexto||'Reto seleccionado';
   document.getElementById('arbol-tronco').textContent=retoGanadorTexto||'Reto seleccionado';
   document.getElementById('matriz-reto').textContent=retoGanadorTexto||'Reto seleccionado';
+  // Cancelar listeners anteriores del árbol para evitar duplicados
+  DB.ref('arbol_causas').off();
+  DB.ref('arbol_efectos').off();
+  // Suscribir de nuevo — escucha TODOS los cambios en tiempo real
   DB.ref('arbol_causas').on('value',snap=>{
-    const items=[];snap.forEach(c=>items.push(c.val()));
-    items.sort((a,b)=>a.ts-b.ts);
+    const items=[];
+    snap.forEach(c=>{const v=c.val();if(v&&v.texto)items.push(v);});
+    items.sort((a,b)=>(a.ts||0)-(b.ts||0));
     renderArbolItems(items,document.getElementById('arbol-causas'),'causas');
     renderArbolItems(items,document.getElementById('fac-causas'),'causas');
   });
   DB.ref('arbol_efectos').on('value',snap=>{
-    const items=[];snap.forEach(c=>items.push(c.val()));
-    items.sort((a,b)=>a.ts-b.ts);
+    const items=[];
+    snap.forEach(c=>{const v=c.val();if(v&&v.texto)items.push(v);});
+    items.sort((a,b)=>(a.ts||0)-(b.ts||0));
     renderArbolItems(items,document.getElementById('arbol-efectos'),'efectos');
     renderArbolItems(items,document.getElementById('fac-efectos'),'efectos');
   });
