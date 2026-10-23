@@ -329,6 +329,12 @@ textarea{resize:vertical;min-height:90px}
     </div>
   </div>
 
+  <!-- Matrices -->
+  <div class="card" id="card-matrices-fac" style="display:none">
+    <h3 style="margin-bottom:12px">Matrices de alternativas</h3>
+    <div id="fac-matrices" style="display:flex;flex-direction:column;gap:12px"></div>
+  </div>
+
   <!-- Participantes -->
   <div class="card">
     <h3 style="margin-bottom:12px">Lista de participantes</h3>
@@ -732,6 +738,19 @@ function cargarFacilitador(){
   refV.on('value',fnV);
   facListeners.push({ref:refV,fn:fnV});
 
+  // Matrices individuales
+  const refM=DB.ref('matrices');
+  const fnM=snap=>{
+    const matrices=[];
+    snap.forEach(c=>{const v=c.val();if(v&&v.nombre)matrices.push(v);});
+    if(matrices.length){
+      document.getElementById('card-matrices-fac').style.display='block';
+      renderMatrices(matrices);
+    }
+  };
+  refM.on('value',fnM);
+  facListeners.push({ref:refM,fn:fnM});
+
   // Árbol causas — mostrar TODOS
   const refC=DB.ref('arbol_causas');
   const fnC=snap=>{
@@ -852,6 +871,41 @@ function renderFacVotos(votos, totalVotos){
     b.onclick=()=>confirmarGanador(topId,topTexto);
     lista.after(b);
   }
+}
+
+function renderMatrices(matrices){
+  const c=document.getElementById('fac-matrices');
+  if(!c)return;
+  matrices.sort((a,b)=>(a.timestamp||0)-(b.timestamp||0));
+  c.innerHTML='';
+  matrices.forEach((m,i)=>{
+    const div=document.createElement('div');
+    div.style.cssText='background:var(--arena);border:1px solid var(--borde);border-radius:10px;padding:14px';
+    div.innerHTML=`
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <span style="font-weight:600;font-size:0.9rem">${esc(m.nombre||'—')}</span>
+        <span class="tag">#${i+1}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div style="background:var(--blanco);border-radius:6px;padding:10px;border:1px solid var(--borde)">
+          <div style="font-size:0.72rem;font-weight:600;color:var(--verde-claro);margin-bottom:4px">¿QUÉ? OBJETIVO</div>
+          <div style="font-size:0.83rem">${esc(m.objetivo||'—')}</div>
+        </div>
+        <div style="background:var(--blanco);border-radius:6px;padding:10px;border:1px solid var(--borde)">
+          <div style="font-size:0.72rem;font-weight:600;color:var(--verde-claro);margin-bottom:4px">¿PARA QUÉ? JUSTIFICACIÓN</div>
+          <div style="font-size:0.83rem">${esc(m.justificacion||'—')}</div>
+        </div>
+        <div style="background:var(--blanco);border-radius:6px;padding:10px;border:1px solid var(--borde)">
+          <div style="font-size:0.72rem;font-weight:600;color:var(--verde-claro);margin-bottom:4px">¿CÓMO? ACCIONES</div>
+          <div style="font-size:0.83rem">${esc(m.acciones||'—')}</div>
+        </div>
+        <div style="background:var(--blanco);border-radius:6px;padding:10px;border:1px solid var(--borde)">
+          <div style="font-size:0.72rem;font-weight:600;color:var(--verde-claro);margin-bottom:4px">¿CON QUÉ? RECURSOS</div>
+          <div style="font-size:0.83rem">${esc(m.recursos||'—')}</div>
+        </div>
+      </div>`;
+    c.appendChild(div);
+  });
 }
 
 function confirmarGanador(id,texto){
