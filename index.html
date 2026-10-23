@@ -741,14 +741,18 @@ function cargarFacilitador(){
   refV.on('value',fnV);
   facListeners.push({ref:refV,fn:fnV});
 
-  // Matrices individuales — siempre escuchar
+  // Matrices — escucha en tiempo real y fuerza render
   const refM=DB.ref('matrices');
   const fnM=snap=>{
     const matrices=[];
-    snap.forEach(c=>{const v=c.val();if(v&&v.nombre)matrices.push(v);});
+    snap.forEach(c=>{
+      const v=c.val();
+      if(v&&v.nombre) matrices.push(v);
+    });
     const card=document.getElementById('card-matrices-fac');
-    if(matrices.length){
-      card.style.display='block';
+    if(!card) return;
+    if(matrices.length>0){
+      card.style.cssText='display:block!important';
       renderMatrices(matrices);
     } else {
       card.style.display='none';
@@ -756,6 +760,16 @@ function cargarFacilitador(){
   };
   refM.on('value',fnM);
   facListeners.push({ref:refM,fn:fnM});
+  // Forzar carga inmediata
+  DB.ref('matrices').once('value',snap=>{
+    const matrices=[];
+    snap.forEach(c=>{const v=c.val();if(v&&v.nombre)matrices.push(v);});
+    const card=document.getElementById('card-matrices-fac');
+    if(card&&matrices.length){
+      card.style.cssText='display:block!important';
+      renderMatrices(matrices);
+    }
+  });
 
   // Árbol causas — mostrar TODOS
   const refC=DB.ref('arbol_causas');
