@@ -608,7 +608,8 @@ function enviarCausa(){
   const texto=document.getElementById('inp-causa').value.trim();
   if(!texto){toast('Escribe una causa');return;}
   const btn=document.getElementById('btn-causa');btn.disabled=true;
-  DB.ref('arbol_causas/'+uid4()).set({texto,nombre:miNombre,uid,ts:Date.now()})
+  // push() genera clave única para cada aporte — múltiples causas por persona
+  DB.ref('arbol_causas').push({texto,nombre:miNombre,uid,ts:Date.now()})
     .then(()=>{document.getElementById('inp-causa').value='';btn.disabled=false;toast('Causa agregada ✓');})
     .catch(()=>{toast('Error al guardar');btn.disabled=false;});
 }
@@ -617,7 +618,8 @@ function enviarEfecto(){
   const texto=document.getElementById('inp-efecto').value.trim();
   if(!texto){toast('Escribe un efecto');return;}
   const btn=document.getElementById('btn-efecto');btn.disabled=true;
-  DB.ref('arbol_efectos/'+uid4()).set({texto,nombre:miNombre,uid,ts:Date.now()})
+  // push() genera clave única para cada aporte — múltiples efectos por persona
+  DB.ref('arbol_efectos').push({texto,nombre:miNombre,uid,ts:Date.now()})
     .then(()=>{document.getElementById('inp-efecto').value='';btn.disabled=false;toast('Efecto agregado ✓');})
     .catch(()=>{toast('Error al guardar');btn.disabled=false;});
 }
