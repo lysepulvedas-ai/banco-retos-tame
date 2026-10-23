@@ -331,7 +331,10 @@ textarea{resize:vertical;min-height:90px}
 
   <!-- Matrices -->
   <div class="card" id="card-matrices-fac" style="display:none">
-    <h3 style="margin-bottom:12px">Matrices de alternativas</h3>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <h3 style="margin:0">Matrices de alternativas</h3>
+      <span class="tag" id="matrices-count"></span>
+    </div>
     <div id="fac-matrices" style="display:flex;flex-direction:column;gap:12px"></div>
   </div>
 
@@ -738,14 +741,17 @@ function cargarFacilitador(){
   refV.on('value',fnV);
   facListeners.push({ref:refV,fn:fnV});
 
-  // Matrices individuales
+  // Matrices individuales — siempre escuchar
   const refM=DB.ref('matrices');
   const fnM=snap=>{
     const matrices=[];
     snap.forEach(c=>{const v=c.val();if(v&&v.nombre)matrices.push(v);});
+    const card=document.getElementById('card-matrices-fac');
     if(matrices.length){
-      document.getElementById('card-matrices-fac').style.display='block';
+      card.style.display='block';
       renderMatrices(matrices);
+    } else {
+      card.style.display='none';
     }
   };
   refM.on('value',fnM);
@@ -877,6 +883,8 @@ function renderMatrices(matrices){
   const c=document.getElementById('fac-matrices');
   if(!c)return;
   matrices.sort((a,b)=>(a.timestamp||0)-(b.timestamp||0));
+  const cnt=document.getElementById('matrices-count');
+  if(cnt) cnt.textContent=matrices.length+' completada'+(matrices.length!==1?'s':'');
   c.innerHTML='';
   matrices.forEach((m,i)=>{
     const div=document.createElement('div');
