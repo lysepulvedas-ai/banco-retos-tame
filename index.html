@@ -245,24 +245,57 @@ textarea{resize:vertical;min-height:90px}
       <div class="arbol-seccion"><div class="arbol-label raices">🌱 Causas</div><div class="arbol-items" id="arbol-causas"><div style="font-size:0.82rem;color:var(--texto-suave)">Aún no hay causas…</div></div></div>
     </div>
   </div>
-  <button class="btn btn-primary btn-full" onclick="irMatriz()">Continuar a la Matriz →</button>
+  <button class="btn btn-primary btn-full" onclick="irMatriz()">Continuar a la Matriz colectiva →</button>
 </div>
 
-<!-- MATRIZ -->
+<!-- MATRIZ COLECTIVA -->
 <div id="p-matriz" class="pantalla">
   <div class="card" style="padding:16px 20px">
     <div class="fase-chip"><span class="fase-dot"></span>Momento 4 de 4</div>
-    <div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--verde);margin-top:6px">Matriz de alternativas</div>
+    <div style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--verde);margin-top:6px">Matriz de alternativas colectiva</div>
+    <p style="font-size:0.82rem;color:var(--texto-suave);margin-top:4px">Aporta tu respuesta a cada pregunta. Todos construimos la matriz juntos.</p>
   </div>
   <div class="card">
     <div class="tronco-box" id="matriz-reto" style="font-size:0.85rem;margin-bottom:16px"></div>
-    <div class="matriz-grid">
-      <div class="matriz-celda"><label>¿Qué queremos lograr? (Objetivo)</label><textarea id="m-objetivo" placeholder="Resultado esperado…"></textarea></div>
-      <div class="matriz-celda"><label>¿Para qué lo haremos? (Justificación)</label><textarea id="m-justificacion" placeholder="¿Por qué es importante?…"></textarea></div>
-      <div class="matriz-celda"><label>¿Cómo lo haremos? (Acciones)</label><textarea id="m-acciones" placeholder="¿Qué actividades proponen?…"></textarea></div>
-      <div class="matriz-celda"><label>¿Con qué recursos y quiénes?</label><textarea id="m-recursos" placeholder="Recursos y articulación con la Universidad…"></textarea></div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <!-- Qué -->
+      <div style="background:var(--arena);border:1.5px solid var(--borde);border-radius:8px;padding:14px">
+        <div style="font-size:0.78rem;font-weight:600;color:var(--verde-claro);margin-bottom:8px">¿QUÉ queremos lograr? (Objetivo)</div>
+        <div id="mc-objetivo-items" style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px"></div>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="mc-objetivo" placeholder="Escribe tu aporte al objetivo…" style="flex:1">
+          <button class="btn btn-secondary btn-sm" onclick="enviarAporteMatriz('objetivo')">Agregar</button>
+        </div>
+      </div>
+      <!-- Para qué -->
+      <div style="background:var(--arena);border:1.5px solid var(--borde);border-radius:8px;padding:14px">
+        <div style="font-size:0.78rem;font-weight:600;color:var(--verde-claro);margin-bottom:8px">¿PARA QUÉ lo haremos? (Justificación)</div>
+        <div id="mc-justificacion-items" style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px"></div>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="mc-justificacion" placeholder="Escribe tu aporte a la justificación…" style="flex:1">
+          <button class="btn btn-secondary btn-sm" onclick="enviarAporteMatriz('justificacion')">Agregar</button>
+        </div>
+      </div>
+      <!-- Cómo -->
+      <div style="background:var(--arena);border:1.5px solid var(--borde);border-radius:8px;padding:14px">
+        <div style="font-size:0.78rem;font-weight:600;color:var(--verde-claro);margin-bottom:8px">¿CÓMO lo haremos? (Acciones)</div>
+        <div id="mc-acciones-items" style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px"></div>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="mc-acciones" placeholder="Escribe tu aporte a las acciones…" style="flex:1">
+          <button class="btn btn-secondary btn-sm" onclick="enviarAporteMatriz('acciones')">Agregar</button>
+        </div>
+      </div>
+      <!-- Con qué -->
+      <div style="background:var(--arena);border:1.5px solid var(--borde);border-radius:8px;padding:14px">
+        <div style="font-size:0.78rem;font-weight:600;color:var(--verde-claro);margin-bottom:8px">¿CON QUÉ recursos y quiénes?</div>
+        <div id="mc-recursos-items" style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px"></div>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="mc-recursos" placeholder="Escribe tu aporte a los recursos…" style="flex:1">
+          <button class="btn btn-secondary btn-sm" onclick="enviarAporteMatriz('recursos')">Agregar</button>
+        </div>
+      </div>
     </div>
-    <button class="btn btn-primary btn-full" style="margin-top:16px" onclick="enviarMatriz()" id="btn-enviar-matriz">Enviar mi matriz →</button>
+    <button class="btn btn-primary btn-full" style="margin-top:16px" onclick="finalizarMatriz()" id="btn-enviar-matriz">Finalizar mi participación →</button>
   </div>
 </div>
 
@@ -329,13 +362,27 @@ textarea{resize:vertical;min-height:90px}
     </div>
   </div>
 
-  <!-- Matrices -->
+  <!-- Matriz colectiva -->
   <div class="card" id="card-matrices-fac" style="display:none">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <h3 style="margin:0">Matrices de alternativas</h3>
-      <span class="tag" id="matrices-count"></span>
+    <h3 style="margin-bottom:14px">Matriz de alternativas colectiva</h3>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="background:var(--arena);border:1px solid var(--borde);border-radius:8px;padding:12px">
+        <div style="font-size:0.75rem;font-weight:600;color:var(--verde-claro);margin-bottom:8px">¿QUÉ? OBJETIVO</div>
+        <div id="fac-mc-objetivo" style="display:flex;flex-direction:column;gap:4px"></div>
+      </div>
+      <div style="background:var(--arena);border:1px solid var(--borde);border-radius:8px;padding:12px">
+        <div style="font-size:0.75rem;font-weight:600;color:var(--verde-claro);margin-bottom:8px">¿PARA QUÉ? JUSTIFICACIÓN</div>
+        <div id="fac-mc-justificacion" style="display:flex;flex-direction:column;gap:4px"></div>
+      </div>
+      <div style="background:var(--arena);border:1px solid var(--borde);border-radius:8px;padding:12px">
+        <div style="font-size:0.75rem;font-weight:600;color:var(--verde-claro);margin-bottom:8px">¿CÓMO? ACCIONES</div>
+        <div id="fac-mc-acciones" style="display:flex;flex-direction:column;gap:4px"></div>
+      </div>
+      <div style="background:var(--arena);border:1px solid var(--borde);border-radius:8px;padding:12px">
+        <div style="font-size:0.75rem;font-weight:600;color:var(--verde-claro);margin-bottom:8px">¿CON QUÉ? RECURSOS</div>
+        <div id="fac-mc-recursos" style="display:flex;flex-direction:column;gap:4px"></div>
+      </div>
     </div>
-    <div id="fac-matrices" style="display:flex;flex-direction:column;gap:12px"></div>
   </div>
 
   <!-- Participantes -->
@@ -644,23 +691,49 @@ function irMatriz(){
   mostrarPantalla('p-matriz');
 }
 
-// ── FASE 4: Matriz ───────────────────────────────────────
-function enviarMatriz(){
-  const obj=document.getElementById('m-objetivo').value.trim();
-  if(!obj){toast('Por favor escribe el objetivo');return;}
-  const btn=document.getElementById('btn-enviar-matriz');btn.disabled=true;btn.textContent='Enviando…';
-  DB.ref('matrices/'+uid).set({
-    uid,nombre:miNombre,correo:miCorreo,celular:miCelular,org:miOrg,
-    reto:retoGanadorTexto,
-    objetivo:obj,
-    justificacion:document.getElementById('m-justificacion').value.trim(),
-    acciones:document.getElementById('m-acciones').value.trim(),
-    recursos:document.getElementById('m-recursos').value.trim(),
-    timestamp:Date.now()
-  }).then(()=>{
-    DB.ref('participantes/'+uid).update({fase:'completo'});
-    mostrarPantalla('p-final');
-  }).catch(()=>{toast('Error al guardar');btn.disabled=false;btn.textContent='Enviar mi matriz →';});
+// ── FASE 4: Matriz colectiva ─────────────────────────────
+const camposMatriz=['objetivo','justificacion','acciones','recursos'];
+
+function irMatriz(){
+  document.getElementById('matriz-reto').textContent=retoGanadorTexto||'Reto seleccionado';
+  mostrarPantalla('p-matriz');
+  // Escuchar aportes en tiempo real
+  camposMatriz.forEach(campo=>{
+    DB.ref('matriz_'+campo).on('value',snap=>{
+      const items=[];
+      snap.forEach(c=>{const v=c.val();if(v&&v.texto)items.push(v);});
+      items.sort((a,b)=>(a.ts||0)-(b.ts||0));
+      renderMatrizItems(items,'mc-'+campo+'-items');
+      renderMatrizItems(items,'fac-mc-'+campo);
+    });
+  });
+}
+
+function renderMatrizItems(items,contenedorId){
+  const c=document.getElementById(contenedorId);
+  if(!c)return;
+  if(!items.length){c.innerHTML='<div style="font-size:0.8rem;color:var(--texto-suave)">Aún no hay aportes…</div>';return;}
+  c.innerHTML=items.map(it=>`
+    <div class="arbol-item-row">${esc(it.texto)}
+      <div class="autor">${esc(it.nombre||'—')}</div>
+    </div>`).join('');
+}
+
+function enviarAporteMatriz(campo){
+  const inp=document.getElementById('mc-'+campo);
+  const texto=inp.value.trim();
+  if(!texto){toast('Escribe tu aporte antes de agregar');return;}
+  DB.ref('matriz_'+campo).push({texto,nombre:miNombre,uid,ts:Date.now()})
+    .then(()=>{inp.value='';toast('Aporte agregado ✓');})
+    .catch(()=>toast('Error al guardar'));
+}
+
+function finalizarMatriz(){
+  const btn=document.getElementById('btn-enviar-matriz');
+  btn.disabled=true;btn.textContent='Finalizando…';
+  DB.ref('participantes/'+uid).update({fase:'completo'})
+    .then(()=>mostrarPantalla('p-final'))
+    .catch(()=>{toast('Error');btn.disabled=false;btn.textContent='Finalizar mi participación →';});
 }
 
 // ── FACILITADOR ──────────────────────────────────────────
@@ -741,34 +814,19 @@ function cargarFacilitador(){
   refV.on('value',fnV);
   facListeners.push({ref:refV,fn:fnV});
 
-  // Matrices — escucha en tiempo real y fuerza render
-  const refM=DB.ref('matrices');
-  const fnM=snap=>{
-    const matrices=[];
-    snap.forEach(c=>{
-      const v=c.val();
-      if(v&&v.nombre) matrices.push(v);
-    });
-    const card=document.getElementById('card-matrices-fac');
-    if(!card) return;
-    if(matrices.length>0){
-      card.style.cssText='display:block!important';
-      renderMatrices(matrices);
-    } else {
-      card.style.display='none';
-    }
-  };
-  refM.on('value',fnM);
-  facListeners.push({ref:refM,fn:fnM});
-  // Forzar carga inmediata
-  DB.ref('matrices').once('value',snap=>{
-    const matrices=[];
-    snap.forEach(c=>{const v=c.val();if(v&&v.nombre)matrices.push(v);});
-    const card=document.getElementById('card-matrices-fac');
-    if(card&&matrices.length){
-      card.style.cssText='display:block!important';
-      renderMatrices(matrices);
-    }
+  // Matriz colectiva — escuchar cada campo
+  const camposM=['objetivo','justificacion','acciones','recursos'];
+  camposM.forEach(campo=>{
+    const refMC=DB.ref('matriz_'+campo);
+    const fnMC=snap=>{
+      const items=[];
+      snap.forEach(c=>{const v=c.val();if(v&&v.texto)items.push(v);});
+      items.sort((a,b)=>(a.ts||0)-(b.ts||0));
+      if(items.length) document.getElementById('card-matrices-fac').style.display='block';
+      renderMatrizItems(items,'fac-mc-'+campo);
+    };
+    refMC.on('value',fnMC);
+    facListeners.push({ref:refMC,fn:fnMC});
   });
 
   // Árbol causas — mostrar TODOS
