@@ -732,21 +732,25 @@ function cargarFacilitador(){
   refV.on('value',fnV);
   facListeners.push({ref:refV,fn:fnV});
 
-  // Árbol causas
+  // Árbol causas — mostrar TODOS
   const refC=DB.ref('arbol_causas');
   const fnC=snap=>{
-    const items=[];snap.forEach(c=>items.push(c.val()));
-    items.sort((a,b)=>a.ts-b.ts);
+    const items=[];
+    snap.forEach(c=>{const v=c.val();if(v&&v.texto)items.push(v);});
+    items.sort((a,b)=>(a.ts||0)-(b.ts||0));
+    document.getElementById('card-arbol-fac').style.display='block';
     renderArbolItems(items,document.getElementById('fac-causas'),'causas');
   };
   refC.on('value',fnC);
   facListeners.push({ref:refC,fn:fnC});
 
-  // Árbol efectos
+  // Árbol efectos — mostrar TODOS
   const refE=DB.ref('arbol_efectos');
   const fnE=snap=>{
-    const items=[];snap.forEach(c=>items.push(c.val()));
-    items.sort((a,b)=>a.ts-b.ts);
+    const items=[];
+    snap.forEach(c=>{const v=c.val();if(v&&v.texto)items.push(v);});
+    items.sort((a,b)=>(a.ts||0)-(b.ts||0));
+    document.getElementById('card-arbol-fac').style.display='block';
     renderArbolItems(items,document.getElementById('fac-efectos'),'efectos');
   };
   refE.on('value',fnE);
