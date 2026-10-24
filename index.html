@@ -1002,47 +1002,89 @@ function confirmarGanador(id,texto){
 
 // ── Exportar Excel ───────────────────────────────────────
 function exportarExcel(){
+  toast('Preparando Excel…',4000);
   Promise.all([
     DB.ref('participantes').once('value'),
     DB.ref('retos').once('value'),
     DB.ref('votos').once('value'),
     DB.ref('arbol_causas').once('value'),
     DB.ref('arbol_efectos').once('value'),
-    DB.ref('matrices').once('value'),
-  ]).then(([sp,sr,sv,sc,se,sm])=>{
-    const participantes=[],retos=[],votos=[],causas=[],efectos=[],matrices=[];
-    sp.forEach(c=>participantes.push(c.val()));
-    sr.forEach(c=>retos.push(c.val()));
-    sv.forEach(c=>votos.push(c.val()));
-    sc.forEach(c=>causas.push(c.val()));
-    se.forEach(c=>efectos.push(c.val()));
-    sm.forEach(c=>matrices.push(c.val()));
+    DB.ref('matriz_objetivo').once('value'),
+    DB.ref('matriz_justificacion').once('value'),
+    DB.ref('matriz_acciones').once('value'),
+    DB.ref('matriz_recursos').once('value'),
+  ]).then(([sp,sr,sv,sc,se,mo,mj,ma,mr])=>{
+    const participantes=[],retos=[],votos=[],causas=[],efectos=[];
+    const mObj=[],mJus=[],mAcc=[],mRec=[];
+    sp.forEach(c=>{const v=c.val();if(v&&v.nombre)participantes.push(v);});
+    sr.forEach(c=>{const v=c.val();if(v&&v.reto)retos.push(v);});
+    sv.forEach(c=>{const v=c.val();if(v)votos.push(v);});
+    sc.forEach(c=>{const v=c.val();if(v&&v.texto)causas.push(v);});
+    se.forEach(c=>{const v=c.val();if(v&&v.texto)efectos.push(v);});
+    mo.forEach(c=>{const v=c.val();if(v&&v.texto)mObj.push(v);});
+    mj.forEach(c=>{const v=c.val();if(v&&v.texto)mJus.push(v);});
+    ma.forEach(c=>{const v=c.val();if(v&&v.texto)mAcc.push(v);});
+    mr.forEach(c=>{const v=c.val();if(v&&v.texto)mRec.push(v);});
+
     const wb=XLSX.utils.book_new();
-    // Participantes
-    const wsP=XLSX.utils.json_to_sheet(participantes.map(p=>({'Nombre':p.nombre||'','Correo':p.correo||'','Celular':p.celular||'','Organización':p.org||'','Estado':p.fase||'','Fecha':p.timestamp?new Date(p.timestamp).toLocaleString('es-CO'):''})));
-    wsP['!cols']=[{wch:25},{wch:30},{wch:15},{wch:30},{wch:15},{wch:20}];
+
+    // Hoja 1: Participantes
+    const wsP=XLSX.utils.json_to_sheet(participantes.map(p=>({
+      'Nombre':p.nombre||'','Correo':p.correo||'','Celular':p.celular||'',
+      'Organización':p.org||'','Estado':p.fase||'',
+      'Fecha':p.timestamp?new Date(p.timestamp).toLocaleString('es-CO'):''
+    })));
+    wsP['!cols']=[{wch:25},{wch:30},{wch:15},{wch:30},{wch:15},{wch:22}];
     XLSX.utils.book_append_sheet(wb,wsP,'Participantes');
-    // Retos
-    const wsR=XLSX.utils.json_to_sheet(retos.map(r=>({'Nombre':r.nombre||'','Correo':r.correo||'','Celular':r.celular||'','Organización':r.org||'','Reto':r.reto||'','Población':r.poblacion||'','Ubicación':r.ubicacion||'','Votos':votos.filter(v=>v.retoId===r.id).length})));
-    wsR['!cols']=[{wch:25},{wch:30},{wch:15},{wch:30},{wch:50},{wch:25},{wch:25},{wch:8}];
-    XLSX.utils.book_append_sheet(wb,wsR,'Retos');
-    // Árbol
-    const arbol=[...efectos.map(e=>({Tipo:'Efecto',Contenido:e.texto||'',Autor:e.nombre||''})),{Tipo:'PROBLEMA CENTRAL',Contenido:retoGanadorTexto,Autor:''},...causas.map(c=>({Tipo:'Causa',Contenido:c.texto||'',Autor:c.nombre||''}))];
+
+    // Hoja 2: Retos con votos
+    const wsR=XLSX.utils.json_to_sheet(retos.map(r=>({
+      'Nombre':r.nombre||'','Organización':r.org||'','Reto':r.reto||'',
+      'Población':r.poblacion||'','Ubicación':r.ubicacion||'',
+      'Votos':votos.filter(v=>v.retoId===r.id||v.retoId===r._key).length
+    })));
+    wsR['!cols']=[{wch:25},{wch:30},{wch:50},{wch:25},{wch:25},{wch:8}];
+    XLSX.utils.book_append_sheet(wb,wsR,'Retos y Votos');
+
+    // Hoja 3: Árbol de problemas
+    const arbol=[
+      ...efectos.sort((a,b)=>(a.ts||0)-(b.ts||0)).map(e=>({Tipo:'Efecto',Contenido:e.texto,Autor:e.nombre||''})),
+      {Tipo:'── PROBLEMA CENTRAL ──',Contenido:retoGanadorTexto,Autor:''},
+      ...causas.sort((a,b)=>(a.ts||0)-(b.ts||0)).map(c=>({Tipo:'Causa',Contenido:c.texto,Autor:c.nombre||''}))
+    ];
     const wsA=XLSX.utils.json_to_sheet(arbol);
-    wsA['!cols']=[{wch:18},{wch:60},{wch:22}];
+    wsA['!cols']=[{wch:22},{wch:60},{wch:25}];
     XLSX.utils.book_append_sheet(wb,wsA,'Árbol de Problemas');
-    // Matrices
-    if(matrices.length){
-      const wsM=XLSX.utils.json_to_sheet(matrices.map(m=>({'Nombre':m.nombre||'','Correo':m.correo||'','Celular':m.celular||'','Reto':m.reto||'','Objetivo':m.objetivo||'','Justificación':m.justificacion||'','Acciones':m.acciones||'','Recursos':m.recursos||''})));
-      wsM['!cols']=[{wch:25},{wch:30},{wch:15},{wch:40},{wch:40},{wch:40},{wch:40},{wch:40}];
-      XLSX.utils.book_append_sheet(wb,wsM,'Matrices');
+
+    // Hoja 4: Matriz colectiva
+    const maxRows=Math.max(mObj.length,mJus.length,mAcc.length,mRec.length,1);
+    const matrizData=[];
+    for(let i=0;i<maxRows;i++){
+      matrizData.push({
+        '¿QUÉ? Objetivo — Autor':mObj[i]?mObj[i].nombre:'',
+        '¿QUÉ? Objetivo — Aporte':mObj[i]?mObj[i].texto:'',
+        '¿PARA QUÉ? Justificación — Autor':mJus[i]?mJus[i].nombre:'',
+        '¿PARA QUÉ? Justificación — Aporte':mJus[i]?mJus[i].texto:'',
+        '¿CÓMO? Acciones — Autor':mAcc[i]?mAcc[i].nombre:'',
+        '¿CÓMO? Acciones — Aporte':mAcc[i]?mAcc[i].texto:'',
+        '¿CON QUÉ? Recursos — Autor':mRec[i]?mRec[i].nombre:'',
+        '¿CON QUÉ? Recursos — Aporte':mRec[i]?mRec[i].texto:'',
+      });
     }
+    const wsM=XLSX.utils.json_to_sheet(matrizData);
+    wsM['!cols']=Array(8).fill({wch:30});
+    XLSX.utils.book_append_sheet(wb,wsM,'Matriz Colectiva');
+
     const data=XLSX.write(wb,{bookType:'xlsx',type:'array'});
     const blob=new Blob([data],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
     const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');a.href=url;a.download=`Banco_Retos_Tame_${new Date().toISOString().slice(0,10)}.xlsx`;a.click();URL.revokeObjectURL(url);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download=`Banco_Retos_Tame_${new Date().toISOString().slice(0,10)}.xlsx`;
+    a.click();
+    URL.revokeObjectURL(url);
     toast('Excel descargado ✓');
-  }).catch(e=>{toast('Error al exportar: '+e.message);});
+  }).catch(e=>{toast('Error al exportar: '+e.message);console.error(e);});
 }
 </script>
 </body>
